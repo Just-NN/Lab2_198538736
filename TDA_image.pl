@@ -60,7 +60,7 @@ insertarAlPrincipio( Elemento, Lista, [Elemento|Lista] ).
 
 
 
-map([], F, []).
+map([], _, []).
 map([H|T], F, [HO|TO]) :- 
     call(F, H, HO),
     map(T,F,TO).
@@ -76,6 +76,7 @@ map([H|T], F, [HO|TO]) :-
 % Tomamos los elementos y los ordenamos en una lista que asumirá el rol de pixel bit
 
 pixbit(X, Y, Bit, Depth, [X, Y, Bit, Depth]).
+
 
 % pixrgb
 % Dominio: X (int) X Y (int) X R (int) X G (int) X B (int) X Depth (int) X lista
@@ -104,11 +105,12 @@ pixhex(X, Y, Hex, Depth, [X, Y, Hex, Depth]).
 
 image(Largo, Ancho, Pixeles, [Largo, Ancho, Pixeles]).
 
-%pixbitd( 0, 0, 1, 10, PA),
-%pixbitd( 0, 1, 0, 20, PB), 
-%pixbitd( 1, 0, 0, 30, PC), 
-%pixbitd( 1, 1, 1, 4, PD), 
-%image( 2, 2, [PA, PB, PC, PD], I),
+% CONSULTAS DE TESTEO
+%pixbit( 0, 0, 1, 10, PA),
+%pixbit( 0, 1, 0, 20, PB), 
+%pixbit( 1, 0, 0, 30, PC), 
+%pixbit( 1, 1, 1, 4, PD),
+%image( 2, 2, [PA, PB, PC, PD], I).
 %imageTobitmap?(I).
 %
 % I = [2, 2, [[0, 0, 1, 10], [0, 1, 0, 20], [1, 0, 0, 30], [1, 1, 1, 4]]]
@@ -144,7 +146,7 @@ pixelsAreHexmap?([Hexmap | Rest]) :-
 % Metas Secundarias: pixbit
 % Comprobamos por medio de una recursión que todos los elementos de la lista sean
 % de tipo pixbit por medio del valor de su Bit, que debe ser 1 o 0
-% ESTA REGLA SERVIRÁ COMO META SECUNDARIA PARA COMPROBAR SI UNA IMAGEN ES DE TIPO HEX
+% ESTA REGLA SERVIRÁ COMO META SECUNDARIA PARA COMPROBAR SI UNA IMAGEN ES DE TIPO BIT
 
 pixelsAreBitmap?([]).
 pixelsAreBitmap?([Pixbit | Rest]) :-
@@ -152,14 +154,78 @@ pixelsAreBitmap?([Pixbit | Rest]) :-
     (Bit == 0 ; Bit == 1),
     pixelsAreBitmap?(Rest).
 
+% pixelsAreRGBmap?
+% Dominio: Pixel (lista de pixbit)
+%
+% Meta Principal: pixelsAreRGBmap?
+% Metas Secundarias: pixrgb
+% Comprobamos por medio de una recursión que todos los elementos de la lista sean
+% de tipo pirxrgb por medio de sus valores R, G, B, que deben de estar entre 0 y 255
+% ESTA REGLA SERVIRÁ COMO META SECUNDARIA PARA COMPROBAR SI UNA IMAGEN ES DE TIPO RGB
+
+pixelsAreBitmap?([]).
+pixelsAreBitmap?([Pixbit | Rest]) :-
+    pixrgb(_, _, R, G, B, _, Pixbit),
+    (R >= 0,
+    R =< 255,
+    G >= 0, 
+    G =< 255, 
+    B >= 0, 
+    B =< 255,  
+    pixelsAreRGBmap?(Rest)).
+
+
+
+%------------------------------------------------------------------------------
+
+% imageTobitmap?
+% Dominio: Image (image)
+%
+% Meta Principal: imageTobitmap?
+% Metas Secundarias: pixelsAreBitmap
+% Utiliza Pixels para comprobar que sus elementos sean de tipo pixbit
+
+
 imageTobitmap?(Image) :-
     image(_, _, Pixels, Image),
     pixelsAreBitmap?(Pixels).
 
+% imageTohexmap?
+% Dominio: Image (image)
+%
+% Meta Principal: imageTohexmap?
+% Metas Secundarias: pixelsAreHexmap
+% Utiliza Pixels para comprobar que sus elementos sean de tipo hex
 
-%solo pixbit
+imageTohexmap?(Image):-
+	image(_, _, Pixels, Image),
+	pixelsAreHexmap?(Pixels).
+
+
+% imageTorgbmap?
+% Dominio: Image (image)
+%
+% Meta Principal: imageTorgbmap?
+% Metas Secundarias: pixelsAreRGBmap
+% Utiliza Pixels para comprobar que sus elementos sean de tipo rgb
+
+imageTorgbmap?(Image):-
+	image(_, _, Pixels, Image),
+	pixelsAreRGBmap?(Pixels).
+
+%---------------------------------------------
 % ancho es Y
-movePixelH(Ancho, Pixel, PixelOut) :-
+% movePixBitH
+% Dominio: Ancho (int), Pixel (pixbit| pixhex| pixrgb)
+%
+% Meta Principal: movePixBitH
+% Metas Secundarias: pixbit
+% Comprueba si el ancho está dentro del rango y, en ese caso
+% se mueve la posición en 1 hacia la derecha. Sino, el valor será 0
+% Básicamente rota todo hacia la derecha y, si es el último elemento, 
+% lo envía al inicio
+
+movePixBitH(Ancho, Pixel, PixelOut) :-
     pixbit(X, Y, Bit, Depth, Pixel),
     (  Y < Ancho
     -> NewY is Y + 1     
@@ -167,9 +233,51 @@ movePixelH(Ancho, Pixel, PixelOut) :-
     ),
     pixbit(X, NewY, Bit, Depth, PixelOut).
 
+%
+% Dominio: Ancho (int), Pixel (pixbit| pixhex| pixrgb)
+%
+% Meta Principal: movePixHexH
+% Metas Secundarias: pixhex
+% Comprueba si el ancho está dentro del rango y, en ese caso
+% se mueve la posición en 1 hacia la derecha. Sino, el valor será 0
+% Básicamente rota todo hacia la derecha y, si es el último elemento, 
+% lo envía al inicio
+
+
+movePixHexH(Ancho, Pixel, PixelOut) :-
+    pixhex(X, Y, Hex, Depth, Pixel),
+    (  Y < Ancho
+    -> NewY is Y + 1     
+    ;  NewY is 0
+    ),
+    pixhex(X, NewY, Hex, Depth, PixelOut).
+
+%
+% Dominio: Ancho (int), Pixel (pixbit| pixhex| pixrgb)
+%
+% Meta Principal: movePixRgbH
+% Metas Secundarias: pixrgb
+% Comprueba si el ancho está dentro del rango y, en ese caso
+% se mueve la posición en 1 hacia la derecha. Sino, el valor será 0
+% Básicamente rota todo hacia la derecha y, si es el último elemento, 
+% lo envía al inicio
+
+movePixRgbH(Ancho, Pixel, PixelOut) :-
+    pixrgb(X, Y, R, G, B, Depth, Pixel),
+    (  Y < Ancho
+    -> NewY is Y + 1     
+    ;  NewY is 0
+    ),
+    pixrgb(X, NewY, R, G, B, Depth, PixelOut).
+
+
+
 movePixelsHorizontally(Ancho, [Pixel|Resto], PixelsAcc, PixelsOut) :-
-    movePixelH(Ancho, Pixel, PixelOut),
-    insertarAlPrincipio(PixelOut, PixelsAcc, PixelsOut),
+	(   pixelsAreBitmap?(Pixel|Resto) -> movePixBitH(Ancho, Pixel, PixelOut)
+    ;   pixelsAreHexmap?(Pixel|Resto) -> movePixHexH(Ancho, Pixel, PixelOut)
+	;   pixelsAreRGBmap?(Pixel|Resto) -> movePixRgbH(Ancho, Pixel, PixelOut)
+    ),
+    insertarAlPrincipio(PixelOut, PixelsAcc, PixelsOut).
     
     
 

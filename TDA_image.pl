@@ -163,8 +163,8 @@ pixelsAreBitmap?([Pixbit | Rest]) :-
 % de tipo pirxrgb por medio de sus valores R, G, B, que deben de estar entre 0 y 255
 % ESTA REGLA SERVIRÁ COMO META SECUNDARIA PARA COMPROBAR SI UNA IMAGEN ES DE TIPO RGB
 
-pixelsAreBitmap?([]).
-pixelsAreBitmap?([Pixbit | Rest]) :-
+pixelsAreRGBmap?([]).
+pixelsAreRGBmap?([Pixbit | Rest]) :-
     pixrgb(_, _, R, G, B, _, Pixbit),
     (R >= 0,
     R =< 255,
@@ -285,3 +285,85 @@ moveH(ImageIn, ImageOut) :-
     image(Largo, Ancho, PixelsIn, ImageIn),
     movePixelsHorizontally(Ancho, PixelsIn, PixelsOut),
 	image(Largo, Ancho, PixelsOut, ImageOut).
+
+
+
+movePixBitV(Alto, Pixel, PixelOut) :-
+    pixbit(X, Y, Bit, Depth, Pixel),
+    (  X < Alto
+    -> NewX is X+ 1     
+    ;  NewX is 0
+    ),
+    pixbit(NewX, Y, Bit, Depth, PixelOut).
+
+movePixHexV(Alto, Pixel, PixelOut) :-
+    pixhex(X, Y, Hex, Depth, Pixel),
+    (  X < Alto
+    -> NewX is X + 1     
+    ;  NewX is 0
+    ),
+    pixhex(NewX, Y, Hex, Depth, PixelOut).
+
+movePixRgbV(Alto, Pixel, PixelOut) :-
+    pixrgb(X, Y, R, G, B, Depth, Pixel),
+    (  X < Alto
+    -> NewX is X + 1     
+    ;  NewX is 0
+    ),
+    pixrgb(NewX, Y, R, G, B, Depth, PixelOut).
+
+
+movePixelsVertically(Ancho, [Pixel|Resto], PixelsAcc, PixelsOut) :-
+	(   pixelsAreBitmap?(Pixel|Resto) -> movePixBitV(Ancho, Pixel, PixelOut)
+    ;   pixelsAreHexmap?(Pixel|Resto) -> movePixHexV(Ancho, Pixel, PixelOut)
+	;   pixelsAreRGBmap?(Pixel|Resto) -> movePixRgbV(Ancho, Pixel, PixelOut)
+    ),
+    insertarAlPrincipio(PixelOut, PixelsAcc, PixelsOut).
+
+moveV(ImageIn, ImageOut) :-
+    image(Largo, Ancho, PixelsIn, ImageIn),
+    movePixelsVertically(Ancho, PixelsIn, PixelsOut),
+	image(Largo, Ancho, PixelsOut, ImageOut).
+
+
+
+inRangeBit?(X1, X2, Y1, Y2, []).
+inRangeBit?(X1, X2, Y1, Y2, [Pixbit|Rest]):-
+	pixbit(X, Y, _, _, Pixbit),
+	(X =< X2,
+	X >=X1,
+	Y =< Y2,
+	Y >= Y1),
+	inRangeBit?(X1, X2, Y1, Y2 Rest).
+
+inRangeHex?(X1, X2, Y1, Y2, []).
+inRangeHex?(X1, X2, Y1, Y2, [PixBit|Rest]):-
+	pixhex(X, Y, _, _, PixHex),
+	(X =< X2,
+	X >=X1,
+	Y =< Y2,
+	Y >= Y1),
+	inRangeHex?(X1, X2, Y1, Y2, Rest).
+
+inRangeRGB?(X1, X2, Y1, Y2, []).
+inRangeRGB?(X1, X2, Y1, Y2, [PixBit|Rest]):-
+	pixrgb(X, Y, _, _, _, _, PixRGB),
+	(X =< X2,
+	X >=X1,
+	Y =< Y2,
+	Y >= Y1),
+	inRangeRGB?(X1, X2, Y1, Y2, Rest).
+
+
+crop(Largo, Ancho, [Pixel|Resto], PixelsOut):-
+	(	)
+imageCrop(Img1, X1, Y1, X2, Y2, Img2):-
+	image(Largo, Ancho, PixelsIn, Img1),
+
+
+pixelsAreBitmap?([]).
+pixelsAreBitmap?([Pixbit | Rest]) :-
+    pixbit(_, _, Bit, _, Pixbit),
+    (Bit == 0 ; Bit == 1),
+    pixelsAreBitmap?(Rest).
+ 

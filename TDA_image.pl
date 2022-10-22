@@ -124,55 +124,57 @@ image(Largo, Ancho, Pixeles, [Largo, Ancho, Pixeles]).
 %( condition -> then_clause ; else_clause )
 
 
-% pixelsAreHexmap?
+% pixelsAreHexmap
 % Dominio: Hex (lista de pixhex)
 %
-% Meta Principal: pixelsAreHexmap?
+% Meta Principal: pixelsAreHexmap
 % Metas Secundarias: pixhex
 % Caso base: la lista está vacía, se corta la recursión
 % Cualquier otro, se recorre elemento a elemento, comprobando que sea
 % de tipo hex, comprobando que su valor Hex sea un string (puesto que es el único pixel que contiene string
 % ESTA REGLA SERVIRÁ COMO META SECUNDARIA PARA COMPROBAR SI UNA IMAGEN ES DE TIPO HEX
-pixelsAreHexmap?([]).
-pixelsAreHexmap?([Hexmap | Rest]) :-
+pixelsAreHexmap([]).
+pixelsAreHexmap([Hexmap | Rest]) :-
     pixhex(_, _, Hex, _, Hexmap),
     string(Hex),
     pixelsAreHexmap(Rest).
 
-% pixelsAreBitmap?
+% pixelsAreBitmap
 % Dominio: Pixel (lista de pixbit)
 %
-% Meta Principal: pixelsAreBitmap?
+% Meta Principal: pixelsAreBitmap
 % Metas Secundarias: pixbit
 % Comprobamos por medio de una recursión que todos los elementos de la lista sean
 % de tipo pixbit por medio del valor de su Bit, que debe ser 1 o 0
 % ESTA REGLA SERVIRÁ COMO META SECUNDARIA PARA COMPROBAR SI UNA IMAGEN ES DE TIPO BIT
 
-pixelsAreBitmap?([]).
-pixelsAreBitmap?([Pixbit | Rest]) :-
-    pixbit(_, _, Bit, _, Pixbit),
-    (Bit == 0 ; Bit == 1),
-    pixelsAreBitmap?(Rest).
 
-% pixelsAreRGBmap?
+pixelsAreBitmap([]).
+pixelsAreBitmap([Pixbit | Rest]) :-
+    pixbit(_, _, Bit, _, Pixbit),
+    (Bit = 0; Bit = 1   ),
+    pixelsAreBitmap(Rest).
+
+% pixelsAreRGBmap
 % Dominio: Pixel (lista de pixbit)
 %
-% Meta Principal: pixelsAreRGBmap?
+% Meta Principal: pixelsAreRGBmap
 % Metas Secundarias: pixrgb
 % Comprobamos por medio de una recursión que todos los elementos de la lista sean
 % de tipo pirxrgb por medio de sus valores R, G, B, que deben de estar entre 0 y 255
 % ESTA REGLA SERVIRÁ COMO META SECUNDARIA PARA COMPROBAR SI UNA IMAGEN ES DE TIPO RGB
 
-pixelsAreRGBmap?([]).
-pixelsAreRGBmap?([Pixbit | Rest]) :-
+pixelsAreRGBmap([]).
+pixelsAreRGBmap([Pixbit | Rest]) :-
     pixrgb(_, _, R, G, B, _, Pixbit),
     (R >= 0,
     R =< 255,
     G >= 0, 
     G =< 255, 
     B >= 0, 
-    B =< 255,  
-    pixelsAreRGBmap?(Rest)).
+    B =< 255
+    ),  
+    pixelsAreRGBmap(Rest).
 
 
 
@@ -186,9 +188,9 @@ pixelsAreRGBmap?([Pixbit | Rest]) :-
 % Utiliza Pixels para comprobar que sus elementos sean de tipo pixbit
 
 
-imageTobitmap?(Image) :-
+imageTobitmap(Image) :-
     image(_, _, Pixels, Image),
-    pixelsAreBitmap?(Pixels).
+    pixelsAreBitmap(Pixels).
 
 % imageTohexmap?
 % Dominio: Image (image)
@@ -197,21 +199,21 @@ imageTobitmap?(Image) :-
 % Metas Secundarias: pixelsAreHexmap
 % Utiliza Pixels para comprobar que sus elementos sean de tipo hex
 
-imageTohexmap?(Image):-
+imageTohexmap(Image):-
 	image(_, _, Pixels, Image),
-	pixelsAreHexmap?(Pixels).
+	pixelsAreHexmap(Pixels).
 
 
-% imageTorgbmap?
+% imageTorgbmap
 % Dominio: Image (image)
 %
 % Meta Principal: imageTorgbmap?
 % Metas Secundarias: pixelsAreRGBmap
 % Utiliza Pixels para comprobar que sus elementos sean de tipo rgb
 
-imageTorgbmap?(Image):-
+imageTorgbmap(Image):-
 	image(_, _, Pixels, Image),
-	pixelsAreRGBmap?(Pixels).
+	pixelsAreRGBmap(Pixels).
 
 %---------------------------------------------
 % ancho es Y
@@ -270,14 +272,24 @@ movePixRgbH(Ancho, Pixel, PixelOut) :-
     ),
     pixrgb(X, NewY, R, G, B, Depth, PixelOut).
 
+movePixelsBitH(_,[],[]).
+movePixelsBitH(Ancho, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
+    movePixBitH(Ancho, PixelIn, PixelOut),
+    movePixelsBitH(Ancho, PixelsIn, PixelsOut).
 
+moveImageHorizontally(ImgIn, ImgOut):-
+    image(Largo, Ancho, PixelsIn, ImgIn),
+    movePixelsBitH(Ancho, PixelsIn, PixelsOut),
+    image(Largo, Ancho, PixelsOut, ImgOut).
 
-movePixelsHorizontally(Ancho, [Pixel|Resto], PixelsAcc, PixelsOut) :-
-	(   pixelsAreBitmap?(Pixel|Resto) -> movePixBitH(Ancho, Pixel, PixelOut)
-    ;   pixelsAreHexmap?(Pixel|Resto) -> movePixHexH(Ancho, Pixel, PixelOut)
-	;   pixelsAreRGBmap?(Pixel|Resto) -> movePixRgbH(Ancho, Pixel, PixelOut)
+movePixelsHorizontally(Ancho, [PixIn|PixsIn], [PixOut|PixsOut]) :-
+	(   pixelsAreBitmap(PixIn|PixsIn) -> movePixBitH(Ancho, PixIn, PixOut)
     ),
-    insertarAlPrincipio(PixelOut, PixelsAcc, PixelsOut).
+    (   pixelsAreHexmap(PixIn|PixsIn) -> movePixHexH(Ancho, PixIn, PixOut)
+    ),
+    (   pixelsAreRGBmap(PixIn|PixsIn) -> movePixRgbH(Ancho, PixIn, PixOut)
+    ),
+    movePixelsHorizontally(Ancho, PixsIn, PixsOut).
     
     
 
@@ -287,11 +299,12 @@ moveH(ImageIn, ImageOut) :-
 	image(Largo, Ancho, PixelsOut, ImageOut).
 
 
+%% EL FLIP TIENE QUE USAR moveH LA MITAD DEL ANCHO
 
 movePixBitV(Alto, Pixel, PixelOut) :-
     pixbit(X, Y, Bit, Depth, Pixel),
     (  X < Alto
-    -> NewX is X+ 1     
+    -> NewX is X + 1     
     ;  NewX is 0
     ),
     pixbit(NewX, Y, Bit, Depth, PixelOut).
@@ -314,56 +327,60 @@ movePixRgbV(Alto, Pixel, PixelOut) :-
 
 
 movePixelsVertically(Ancho, [Pixel|Resto], PixelsAcc, PixelsOut) :-
-	(   pixelsAreBitmap?(Pixel|Resto) -> movePixBitV(Ancho, Pixel, PixelOut)
-    ;   pixelsAreHexmap?(Pixel|Resto) -> movePixHexV(Ancho, Pixel, PixelOut)
-	;   pixelsAreRGBmap?(Pixel|Resto) -> movePixRgbV(Ancho, Pixel, PixelOut)
+	(   pixelsAreBitmap(Pixel|Resto) -> movePixBitV(Ancho, Pixel, PixelOut)
+    ;   pixelsAreHexmap(Pixel|Resto) -> movePixHexV(Ancho, Pixel, PixelOut)
+	;   pixelsAreRGBmap(Pixel|Resto) -> movePixRgbV(Ancho, Pixel, PixelOut)
     ),
     insertarAlPrincipio(PixelOut, PixelsAcc, PixelsOut).
 
 moveV(ImageIn, ImageOut) :-
     image(Largo, Ancho, PixelsIn, ImageIn),
-    movePixelsVertically(Ancho, PixelsIn, PixelsOut),
+    movePixelsVertically(Ancho, PixelsIn, _, PixelsOut),
 	image(Largo, Ancho, PixelsOut, ImageOut).
 
 
 
-inRangeBit?(X1, X2, Y1, Y2, []).
-inRangeBit?(X1, X2, Y1, Y2, [Pixbit|Rest]):-
+inRangeBit(_, _, _, _, []):- !.
+inRangeBit(X1, Y1, X1, Y2, [Pixbit|Rest]):-
 	pixbit(X, Y, _, _, Pixbit),
 	(X =< X2,
 	X >=X1,
 	Y =< Y2,
 	Y >= Y1),
-	inRangeBit?(X1, X2, Y1, Y2 Rest).
+	inRangeBit(X1, Y1, X2, Y2, Rest).
 
-inRangeHex?(X1, X2, Y1, Y2, []).
-inRangeHex?(X1, X2, Y1, Y2, [PixBit|Rest]):-
+inRangeHex(_, _, _, _, []):-!.
+inRangeHex(X1, Y1, X2, Y2, [PixHex|Rest]):-
 	pixhex(X, Y, _, _, PixHex),
 	(X =< X2,
 	X >=X1,
 	Y =< Y2,
 	Y >= Y1),
-	inRangeHex?(X1, X2, Y1, Y2, Rest).
+	inRangeHex(X1, Y1, X2, Y2, Rest).
 
-inRangeRGB?(X1, X2, Y1, Y2, []).
-inRangeRGB?(X1, X2, Y1, Y2, [PixBit|Rest]):-
+inRangeRGB(_, _, _, _, []):-!.
+inRangeRGB(X1, Y1, X2, Y2, [PixRGB|Rest]):-
 	pixrgb(X, Y, _, _, _, _, PixRGB),
 	(X =< X2,
 	X >=X1,
 	Y =< Y2,
 	Y >= Y1),
-	inRangeRGB?(X1, X2, Y1, Y2, Rest).
+	inRangeRGB(X1, Y1, X2, Y2, Rest).
+
+crop(_, _, _, _, [], _, _):-!.
+crop(X1, Y1, X2, Y2, [Pixel|Resto], PixelsAcc, PixelsOut):-
+	(	inRangeBit(X1, Y1, X2, Y2, Pixel) -> insertarAlPrincipio(Pixel, PixelsAcc, PixelsOut)
+	;	inRangeRGB(X1, Y1, X2, Y2, Pixel) -> insertarAlPrincipio(Pixel, PixelsAcc, PixelsOut)
+	;	inRangeHex(X1, Y1, X2, Y2, Pixel) -> insertarAlPrincipio(Pixel, PixelsAcc, PixelsOut)
+	),
+	crop(X1, Y1, X2, Y2, Resto, PixelsAcc, PixelsOut).
 
 
-crop(Largo, Ancho, [Pixel|Resto], PixelsOut):-
-	(	)
-imageCrop(Img1, X1, Y1, X2, Y2, Img2):-
-	image(Largo, Ancho, PixelsIn, Img1),
 
-
-pixelsAreBitmap?([]).
-pixelsAreBitmap?([Pixbit | Rest]) :-
-    pixbit(_, _, Bit, _, Pixbit),
-    (Bit == 0 ; Bit == 1),
-    pixelsAreBitmap?(Rest).
- 
+%pixelsAreBitmap([]).
+%pixelsAreBitmap([Pixbit | Rest]) :-
+%    pixbit(_, _, Bit, _, Pixbit),
+%    (Bit == 0 ; Bit == 1),
+%    pixelsAreBitmap(Rest).
+% No logro concretar por qué no funciona pixelsAre_, siempre se
+% bugean al hacer el backtracking

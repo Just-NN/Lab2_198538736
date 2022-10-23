@@ -133,7 +133,7 @@ image(Largo, Ancho, Pixeles, [Largo, Ancho, Pixeles]).
 % Cualquier otro, se recorre elemento a elemento, comprobando que sea
 % de tipo hex, comprobando que su valor Hex sea un string (puesto que es el único pixel que contiene string
 % ESTA REGLA SERVIRÁ COMO META SECUNDARIA PARA COMPROBAR SI UNA IMAGEN ES DE TIPO HEX
-pixelsAreHexmap([]).
+pixelsAreHexmap([]):-!.
 pixelsAreHexmap([Hexmap | Rest]) :-
     pixhex(_, _, Hex, _, Hexmap),
     string(Hex),
@@ -382,5 +382,4 @@ crop(X1, Y1, X2, Y2, [Pixel|Resto], PixelsAcc, PixelsOut):-
 %    pixbit(_, _, Bit, _, Pixbit),
 %    (Bit == 0 ; Bit == 1),
 %    pixelsAreBitmap(Rest).
-% No logro concretar por qué no funciona pixelsAre_, siempre se
-% bugean al hacer el backtracking
+ 

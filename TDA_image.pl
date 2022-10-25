@@ -65,6 +65,16 @@ map([H|T], F, [HO|TO]) :-
     call(F, H, HO),
     map(T,F,TO).
 
+car([X|_], X).
+cadr([_,Y|_], Y).
+caddr([_,_,R|_], R).
+cadddr([_,_,_,G|_], G).
+cadddr([_,_,_,_, B|_],B).
+caddddr([_,_,_,_,_, D|_], D).
+
+
+
+
 % Hasta aquí, han sido sólo metas que podríamos utilizar
 % como secundarias para las solicitadas por enunciado
 
@@ -110,8 +120,8 @@ image(Largo, Ancho, Pixeles, [Largo, Ancho, Pixeles]).
 %pixbit( 0, 1, 0, 20, PB), 
 %pixbit( 1, 0, 0, 30, PC), 
 %pixbit( 1, 1, 1, 4, PD),
-%image( 2, 2, [PA, PB, PC, PD], I).
-%imageTobitmap?(I).
+%image( 2, 2, [PA, PB, PC, PD], I),
+%imageTobitmap(I).
 %
 % I = [2, 2, [[0, 0, 1, 10], [0, 1, 0, 20], [1, 0, 0, 30], [1, 1, 1, 4]]]
 %image(Largo, Ancho, Pixeles, [2, 2, [[0, 0, 1, 10], [0, 1, 0, 20], [1, 0, 0, 30], [1, 1, 1, 4]]]).
@@ -149,10 +159,10 @@ pixelsAreHexmap([Hexmap | Rest]) :-
 % ESTA REGLA SERVIRÁ COMO META SECUNDARIA PARA COMPROBAR SI UNA IMAGEN ES DE TIPO BIT
 
 
-pixelsAreBitmap([]).
-pixelsAreBitmap([Pixbit | Rest]) :-
+pixelsAreBitmap([]):-!.
+pixelsAreBitmap([Pixbit|Rest]) :-
     pixbit(_, _, Bit, _, Pixbit),
-    (Bit = 0; Bit = 1   ),
+    (Bit == 0; Bit == 1),
     pixelsAreBitmap(Rest).
 
 % pixelsAreRGBmap
@@ -164,7 +174,7 @@ pixelsAreBitmap([Pixbit | Rest]) :-
 % de tipo pirxrgb por medio de sus valores R, G, B, que deben de estar entre 0 y 255
 % ESTA REGLA SERVIRÁ COMO META SECUNDARIA PARA COMPROBAR SI UNA IMAGEN ES DE TIPO RGB
 
-pixelsAreRGBmap([]).
+pixelsAreRGBmap([]):-!.
 pixelsAreRGBmap([Pixbit | Rest]) :-
     pixrgb(_, _, R, G, B, _, Pixbit),
     (R >= 0,
@@ -174,7 +184,7 @@ pixelsAreRGBmap([Pixbit | Rest]) :-
     B >= 0, 
     B =< 255
     ),  
-    pixelsAreRGBmap(Rest).
+    pixelsAreRGBmap(Rest). 
 
 
 
@@ -188,9 +198,16 @@ pixelsAreRGBmap([Pixbit | Rest]) :-
 % Utiliza Pixels para comprobar que sus elementos sean de tipo pixbit
 
 
+bit(Pixel):-
+    caddr(Pixel, X),
+    (   X == 1 ; X==0),
+    contar(Pixel, N),
+    (   N == 4).
+    
+
 imageTobitmap(Image) :-
     image(_, _, Pixels, Image),
-    pixelsAreBitmap(Pixels).
+    maplist(bit, Pixels).
 
 % imageTohexmap?
 % Dominio: Image (image)
@@ -277,17 +294,23 @@ movePixelsBitH(Ancho, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
     movePixBitH(Ancho, PixelIn, PixelOut),
     movePixelsBitH(Ancho, PixelsIn, PixelsOut).
 
+movePixelsRgbH(_,[],[]).
+movePixelsRgbH(Ancho, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
+    movePixRgbH(Ancho, PixelIn, PixelOut),
+    movePixelsRgbH(Ancho, PixelsIn, PixelsOut).
+
+
 moveImageHorizontally(ImgIn, ImgOut):-
     image(Largo, Ancho, PixelsIn, ImgIn),
     movePixelsBitH(Ancho, PixelsIn, PixelsOut),
     image(Largo, Ancho, PixelsOut, ImgOut).
 
+
+movePixelsHorizontally(_, [], []).
 movePixelsHorizontally(Ancho, [PixIn|PixsIn], [PixOut|PixsOut]) :-
-	(   pixelsAreBitmap(PixIn|PixsIn) -> movePixBitH(Ancho, PixIn, PixOut)
-    ),
-    (   pixelsAreHexmap(PixIn|PixsIn) -> movePixHexH(Ancho, PixIn, PixOut)
-    ),
-    (   pixelsAreRGBmap(PixIn|PixsIn) -> movePixRgbH(Ancho, PixIn, PixOut)
+	contar(PixIn, N),
+    (   N == 4 ->  movePixelsBitH(Ancho, [PixIn|PixsIn], [PixOut|PixsOut])
+    ;   movePixelsRgbH(Ancho, [PixIn|PixsIn], [PixOut|PixsOut])
     ),
     movePixelsHorizontally(Ancho, PixsIn, PixsOut).
     

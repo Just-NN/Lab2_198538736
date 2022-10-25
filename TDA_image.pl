@@ -21,6 +21,8 @@ contar([_|Resto], N) :-
     contar(Resto, Acc),
     N is Acc + 1.
 
+
+
 % contarSoloNumeros([1,2,3, "a"], N).
 % Dominio: lista (de cualquier tipo) X N (int)
 %
@@ -276,19 +278,19 @@ movePixRgbH(Ancho, Pixel, PixelOut) :-
     ),
     pixrgb(X, NewY, R, G, B, Depth, PixelOut).
 
-movePixelsBitHexH(_,[],[]).
+movePixelsBitHexH(_,[],_).
 movePixelsBitHexH(Ancho, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
     movePixBitH(Ancho, PixelIn, PixelOut),
     movePixelsBitHexH(Ancho, PixelsIn, PixelsOut).
 
-movePixelsRgbH(_,[],[]).
+movePixelsRgbH(_,[],_).
 movePixelsRgbH(Ancho, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
     movePixRgbH(Ancho, PixelIn, PixelOut),
     movePixelsRgbH(Ancho, PixelsIn, PixelsOut).
 
 
 
-movePixelsHorizontally(_, [], []).
+movePixelsHorizontally(_, [], _).
 movePixelsHorizontally(Ancho, [PixIn|PixsIn], [PixOut|PixsOut]) :-
 	contar(PixIn, N),
     (   N == 4 ->  movePixelsBitHexH(Ancho, [PixIn|PixsIn], [PixOut|PixsOut])
@@ -330,6 +332,9 @@ movePixBitV(Alto, Pixel, PixelOut) :-
 
 
 
+
+
+
 %
 % Dominio: Ancho (int), Pixel (pixbit| pixhex| pixrgb)
 %
@@ -348,19 +353,19 @@ movePixRgbV(Alto, Pixel, PixelOut) :-
     ),
     pixrgb(X, NewY, R, G, B, Depth, PixelOut).
 
-movePixelsBitHexV(_,[],[]).
+movePixelsBitHexV(_,[],_).
 movePixelsBitHexV(Alto, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
     movePixBitV(Alto, PixelIn, PixelOut),
     movePixelsBitHexV(Alto, PixelsIn, PixelsOut).
 
-movePixelsRgbV(_,[],[]).
+movePixelsRgbV(_,[],_).
 movePixelsRgbV(Alto, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
     movePixRgbV(Alto, PixelIn, PixelOut),
     movePixelsRgbV(Alto, PixelsIn, PixelsOut).
 
 
 
-movePixelsVertically(_, [], []).
+movePixelsVertically(_, [], _).
 movePixelsVertically(Alto, [PixIn|PixsIn], [PixOut|PixsOut]) :-
 	contar(PixIn, N),
     (   N == 4 ->  movePixelsBitHexV(Alto, [PixIn|PixsIn], [PixOut|PixsOut])
@@ -376,42 +381,34 @@ flipV(ImageIn, ImageOut) :-
 	image(Largo, Ancho, PixelsOut, ImageOut).
 
 
+%----------------------------- crop ---------
 
 
-inRangeBit(_, _, _, _, []):- !.
-inRangeBit(X1, Y1, X1, Y2, [Pixbit|Rest]):-
-	pixbit(X, Y, _, _, Pixbit),
-	(X =< X2,
-	X >=X1,
-	Y =< Y2,
-	Y >= Y1),
-	inRangeBit(X1, Y1, X2, Y2, Rest).
 
-inRangeHex(_, _, _, _, []):-!.
-inRangeHex(X1, Y1, X2, Y2, [PixHex|Rest]):-
-	pixhex(X, Y, _, _, PixHex),
-	(X =< X2,
-	X >=X1,
-	Y =< Y2,
-	Y >= Y1),
-	inRangeHex(X1, Y1, X2, Y2, Rest).
+inRange(X1, Y1, X2, Y2, Pix):-
+    	car(Pix, X),
+    	cadr(Pix, Y),
+        X >= X1,
+    	X =< X2,
+    	Y >= Y1,
+    	Y =< Y2
+    	.
+    
+    
 
-inRangeRGB(_, _, _, _, []):-!.
-inRangeRGB(X1, Y1, X2, Y2, [PixRGB|Rest]):-
-	pixrgb(X, Y, _, _, _, _, PixRGB),
-	(X =< X2,
-	X >=X1,
-	Y =< Y2,
-	Y >= Y1),
-	inRangeRGB(X1, Y1, X2, Y2, Rest).
-
-crop(_, _, _, _, [], _, _):-!.
-crop(X1, Y1, X2, Y2, [Pixel|Resto], PixelsAcc, PixelsOut):-
-	(	inRangeBit(X1, Y1, X2, Y2, Pixel) -> insertarAlPrincipio(Pixel, PixelsAcc, PixelsOut)
-	;	inRangeRGB(X1, Y1, X2, Y2, Pixel) -> insertarAlPrincipio(Pixel, PixelsAcc, PixelsOut)
-	;	inRangeHex(X1, Y1, X2, Y2, Pixel) -> insertarAlPrincipio(Pixel, PixelsAcc, PixelsOut)
-	),
-	crop(X1, Y1, X2, Y2, Resto, PixelsAcc, PixelsOut).
+cropPixels(_, _, _, _, [], Accum, Accum).
+cropPixels(X1, Y1, X2, Y2, [PixIn|PixsIn], Accum, Output):-
+    (   inRange(X1, Y1, X2, Y2, PixIn) ->	insertarAlPrincipio(PixIn, Accum, NewAccum)
+    ;  NewAccum = Accum
+    ),
+    cropPixels(X1, Y1, X2, Y2, PixsIn, NewAccum, Output)
+    .
+    
+crop(X1, Y1, X2, Y2, ImageIn, ImageOut):-
+	image(Largo, Ancho, PixelsIn, ImageIn),
+    cropPixels(X1, Y1, X2, Y2, PixelsIn, [], PixelsOut),
+    image(Largo, Ancho, PixelsOut, ImageOut).
+	
 
 
 

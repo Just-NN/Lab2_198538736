@@ -245,31 +245,18 @@ imageTorgbmap(Image):-
 % lo envía al inicio
 
 movePixBitH(Ancho, Pixel, PixelOut) :-
-    pixbit(X, Y, Bit, Depth, Pixel),
-    (  Y < Ancho
+    car(Pixel, X),
+    cadr(Pixel, Y),
+    caddr(Pixel, BH),
+    cadddr(Pixel, Depth),
+    (  Y+1 < Ancho
     -> NewY is Y + 1     
     ;  NewY is 0
     ),
-    pixbit(X, NewY, Bit, Depth, PixelOut).
-
-%
-% Dominio: Ancho (int), Pixel (pixbit| pixhex| pixrgb)
-%
-% Meta Principal: movePixHexH
-% Metas Secundarias: pixhex
-% Comprueba si el ancho está dentro del rango y, en ese caso
-% se mueve la posición en 1 hacia la derecha. Sino, el valor será 0
-% Básicamente rota todo hacia la derecha y, si es el último elemento, 
-% lo envía al inicio
+    (   string(BH) -> pixhex(X, NewY, BH, Depth, PixelOut)
+    ;   pixbit(X, NewY, BH, Depth, PixelOut)).
 
 
-movePixHexH(Ancho, Pixel, PixelOut) :-
-    pixhex(X, Y, Hex, Depth, Pixel),
-    (  Y < Ancho
-    -> NewY is Y + 1     
-    ;  NewY is 0
-    ),
-    pixhex(X, NewY, Hex, Depth, PixelOut).
 
 %
 % Dominio: Ancho (int), Pixel (pixbit| pixhex| pixrgb)
@@ -289,10 +276,10 @@ movePixRgbH(Ancho, Pixel, PixelOut) :-
     ),
     pixrgb(X, NewY, R, G, B, Depth, PixelOut).
 
-movePixelsBitH(_,[],[]).
-movePixelsBitH(Ancho, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
+movePixelsBitHexH(_,[],[]).
+movePixelsBitHexH(Ancho, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
     movePixBitH(Ancho, PixelIn, PixelOut),
-    movePixelsBitH(Ancho, PixelsIn, PixelsOut).
+    movePixelsBitHexH(Ancho, PixelsIn, PixelsOut).
 
 movePixelsRgbH(_,[],[]).
 movePixelsRgbH(Ancho, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
@@ -300,66 +287,94 @@ movePixelsRgbH(Ancho, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
     movePixelsRgbH(Ancho, PixelsIn, PixelsOut).
 
 
-moveImageHorizontally(ImgIn, ImgOut):-
-    image(Largo, Ancho, PixelsIn, ImgIn),
-    movePixelsBitH(Ancho, PixelsIn, PixelsOut),
-    image(Largo, Ancho, PixelsOut, ImgOut).
-
 
 movePixelsHorizontally(_, [], []).
 movePixelsHorizontally(Ancho, [PixIn|PixsIn], [PixOut|PixsOut]) :-
 	contar(PixIn, N),
-    (   N == 4 ->  movePixelsBitH(Ancho, [PixIn|PixsIn], [PixOut|PixsOut])
+    (   N == 4 ->  movePixelsBitHexH(Ancho, [PixIn|PixsIn], [PixOut|PixsOut])
     ;   movePixelsRgbH(Ancho, [PixIn|PixsIn], [PixOut|PixsOut])
     ),
     movePixelsHorizontally(Ancho, PixsIn, PixsOut).
     
     
 
-moveH(ImageIn, ImageOut) :-
+flipH(ImageIn, ImageOut) :-
     image(Largo, Ancho, PixelsIn, ImageIn),
     movePixelsHorizontally(Ancho, PixelsIn, PixelsOut),
 	image(Largo, Ancho, PixelsOut, ImageOut).
 
 
-%% EL FLIP TIENE QUE USAR moveH LA MITAD DEL ANCHO
+%---------------------------------------------
+% alto es X
+% movePixBitH
+% Dominio: Ancho (int), Pixel (pixbit| pixhex| pixrgb)
+%
+% Meta Principal: movePixBitH
+% Metas Secundarias: pixbit
+% Comprueba si el ancho está dentro del rango y, en ese caso
+% se mueve la posición en 1 hacia la derecha. Sino, el valor será 0
+% Básicamente rota todo hacia la derecha y, si es el último elemento, 
+% lo envía al inicio
 
 movePixBitV(Alto, Pixel, PixelOut) :-
-    pixbit(X, Y, Bit, Depth, Pixel),
-    (  X < Alto
+    car(Pixel, X),
+    cadr(Pixel, Y),
+    caddr(Pixel, BH),
+    cadddr(Pixel, Depth),
+    (  X + 1< Alto
     -> NewX is X + 1     
     ;  NewX is 0
     ),
-    pixbit(NewX, Y, Bit, Depth, PixelOut).
+    (   string(BH) -> pixhex(NewX, Y, BH, Depth, PixelOut)
+    ;   pixbit(NewX, Y, BH, Depth, PixelOut)).
 
-movePixHexV(Alto, Pixel, PixelOut) :-
-    pixhex(X, Y, Hex, Depth, Pixel),
-    (  X < Alto
-    -> NewX is X + 1     
-    ;  NewX is 0
-    ),
-    pixhex(NewX, Y, Hex, Depth, PixelOut).
+
+
+%
+% Dominio: Ancho (int), Pixel (pixbit| pixhex| pixrgb)
+%
+% Meta Principal: movePixRgbH
+% Metas Secundarias: pixrgb
+% Comprueba si el ancho está dentro del rango y, en ese caso
+% se mueve la posición en 1 hacia la derecha. Sino, el valor será 0
+% Básicamente rota todo hacia la derecha y, si es el último elemento, 
+% lo envía al inicio
 
 movePixRgbV(Alto, Pixel, PixelOut) :-
     pixrgb(X, Y, R, G, B, Depth, Pixel),
-    (  X < Alto
-    -> NewX is X + 1     
-    ;  NewX is 0
+    (  Y < Alto
+    -> NewY is Y + 1     
+    ;  NewY is 0
     ),
-    pixrgb(NewX, Y, R, G, B, Depth, PixelOut).
+    pixrgb(X, NewY, R, G, B, Depth, PixelOut).
+
+movePixelsBitHexV(_,[],[]).
+movePixelsBitHexV(Alto, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
+    movePixBitV(Alto, PixelIn, PixelOut),
+    movePixelsBitHexV(Alto, PixelsIn, PixelsOut).
+
+movePixelsRgbV(_,[],[]).
+movePixelsRgbV(Alto, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
+    movePixRgbV(Alto, PixelIn, PixelOut),
+    movePixelsRgbV(Alto, PixelsIn, PixelsOut).
 
 
-movePixelsVertically(Ancho, [Pixel|Resto], PixelsAcc, PixelsOut) :-
-	(   pixelsAreBitmap(Pixel|Resto) -> movePixBitV(Ancho, Pixel, PixelOut)
-    ;   pixelsAreHexmap(Pixel|Resto) -> movePixHexV(Ancho, Pixel, PixelOut)
-	;   pixelsAreRGBmap(Pixel|Resto) -> movePixRgbV(Ancho, Pixel, PixelOut)
+
+movePixelsVertically(_, [], []).
+movePixelsVertically(Alto, [PixIn|PixsIn], [PixOut|PixsOut]) :-
+	contar(PixIn, N),
+    (   N == 4 ->  movePixelsBitHexV(Alto, [PixIn|PixsIn], [PixOut|PixsOut])
+    ;   movePixelsRgbV(Alto, [PixIn|PixsIn], [PixOut|PixsOut])
     ),
-    insertarAlPrincipio(PixelOut, PixelsAcc, PixelsOut).
+    movePixelsVertically(Alto, PixsIn, PixsOut).
+    
+    
 
-moveV(ImageIn, ImageOut) :-
+flipV(ImageIn, ImageOut) :-
     image(Largo, Ancho, PixelsIn, ImageIn),
-    movePixelsVertically(Ancho, PixelsIn, _, PixelsOut),
+    movePixelsVertically(Ancho, PixelsIn, PixelsOut),
 	image(Largo, Ancho, PixelsOut, ImageOut).
+
 
 
 
@@ -406,3 +421,31 @@ crop(X1, Y1, X2, Y2, [Pixel|Resto], PixelsAcc, PixelsOut):-
 %    (Bit == 0 ; Bit == 1),
 %    pixelsAreBitmap(Rest).
  
+
+/** <examples>
+?- pixbit( 0, 0, 1, 10, PA),
+pixbit( 0, 1, 0, 20, PB), 
+pixbit( 1, 0, 0, 30, PC), 
+pixbit( 1, 1, 1, 4, PD),
+image( 2, 2, [PA, PB, PC, PD], I),
+moveH(I, X),
+moveImageHorizontally(I, B).
+?- pixbit( 0, 0, 1, 10, PA),
+   pixbit( 0, 1, 0, 20, PB), 
+   pixbit( 1, 0, 0, 30, PC), 
+   pixbit( 1, 1, 1, 4, PD),
+   image( 2, 2, [PA, PB, PC, PD], I),
+   moveH(I, X).
+?- pixbit( 0, 0, 1, 10, PA),
+   pixbit( 0, 1, 0, 20, PB), 
+   pixbit( 1, 0, 0, 30, PC), 
+   pixbit( 1, 1, 1, 4, PD),
+   image( 2, 2, [PA, PB, PC, PD], I),
+   moveH(I, X).
+?- pixbit( 0, 0, 1, 10, PA),
+   pixbit( 0, 1, 0, 20, PB), 
+   pixbit( 1, 0, 0, 30, PC), 
+   pixbit( 1, 1, 1, 4, PD),
+   image( 2, 2, [PA, PB, PC, PD], I),
+   flipH(I, X).
+*/

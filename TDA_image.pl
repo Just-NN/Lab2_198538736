@@ -234,6 +234,11 @@ imageTorgbmap(Image):-
 	image(_, _, Pixels, Image),
 	pixelsAreRGBmap(Pixels).
 
+imageIsCompressed(Image):-
+    image(Largo, Ancho, Pixeles, Image),
+    contar(Pixeles, N),
+    Largo*Ancho > N.
+
 %---------------------------------------------
 % ancho es Y
 % movePixBitH

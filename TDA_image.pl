@@ -413,8 +413,82 @@ crop(X1, Y1, X2, Y2, ImageIn, ImageOut):-
 	image(Largo, Ancho, PixelsIn, ImageIn),
     cropPixels(X1, Y1, X2, Y2, PixelsIn, [], PixelsOut),
     image(Largo, Ancho, PixelsOut, ImageOut).
-	
 
+%---------------------------------------------------- rgb to hex
+truncate(X,N,Result):- X >= 0, Result is floor(10^N*X)/10^N, !.
+
+
+intToHex(X, Y):-
+    (   X==0 ->  Y = "0"
+    ;   X==1 ->  Y = "1"
+    ;   X==2 ->  Y = "2"
+    ;   X==3 ->  Y = "3"
+    ;   X==4 ->  Y = "4"
+    ;   X==5 ->  Y = "5"
+    ;   X==6 ->  Y = "6"
+    ;   X==7 ->  Y = "7"
+    ;   X==8 ->  Y = "8"
+    ;   X==9 ->  Y = "9"
+    ;   X==10 ->  Y = "A"
+    ;   X==11 ->  Y = "B"
+    ;   X==12 ->  Y = "C"
+    ;   X==13 ->  Y = "D"
+    ;   X==14 ->  Y = "E"
+    ;   X==15 ->  Y = "F"
+    ;   X==16 ->  Y = "G"
+    ;   X==0.0 ->  Y = "0"
+    ;   X==1.0 ->  Y = "1"
+    ;   X==2.0 ->  Y = "2"
+    ;   X==3.0 ->  Y = "3"
+    ;   X==4.0 ->  Y = "4"
+    ;   X==5.0 ->  Y = "5"
+    ;   X==6.0 ->  Y = "6"
+    ;   X==7.0 ->  Y = "7"
+    ;   X==8.0 ->  Y = "8"
+    ;   X==9.0 ->  Y = "9"
+    ;   X==10.0 ->  Y = "A"
+    ;   X==11.0 ->  Y = "B"
+    ;   X==12.0 ->  Y = "C"
+    ;   X==13.0 ->  Y = "D"
+    ;   X==14.0 ->  Y = "E"
+    ;   X==15.0 ->  Y = "F"
+    ;   X==16.0 ->  Y = "G").
+
+getInt(X, Y):-
+    truncate(X, 0, Y).
+
+getDec(X, Y):-
+    (   X < 1 ->  getInt(X, Y)
+    ;   (	getInt(X, Int),
+            Y is X - Int)).
+
+rgbToHex(X, Y):-
+    X1 is X/16,
+    getInt(X1, Int),
+    getDec(X1, Dec),
+    intToHex(Int, NewInt),
+    NewDec is Dec*16,
+    intToHex(NewDec, NewInt2),
+    atom_concat(NewInt, NewInt2, Y).
+
+pixsRGBToHex([], Accum, Accum).
+pixsRGBToHex([PixIn|PixsIn], Accum, Output):-
+    pixrgb(X, Y, R, G, B, D, PixIn),
+    rgbToHex(R, ROut),
+    rgbToHex(G, GOut),
+    rgbToHex(B, BOut),
+    atom_concat("#", ROut, NewR),
+    atom_concat(NewR, GOut, NewG),
+    atom_concat(NewG, BOut, RGB),
+    pixhex(X, Y, RGB, D, PixOut),
+    insertarAlPrincipio(PixOut, Accum, NewAccum),
+    pixsRGBToHex(PixsIn, NewAccum, Output).
+
+	
+imgRGBToHex(ImageIn, ImageOut):-
+    image(Largo, Ancho, PixelsIn, ImageIn),
+    pixsRGBToHex(PixelsIn, [], PixelsOut),
+    image(Largo, Ancho, PixelsOut, ImageOut).
 
 
 %pixelsAreBitmap([]).

@@ -37,6 +37,7 @@ contarSoloNumeros([],0).
 contarSoloNumeros([Elemento|Resto], N) :- 
     contarSoloNumeros(Resto, Acc),
     (  number(Elemento)  %if
+    
     -> N is Acc + 1      %then, tambien se puede usar N = Acc + 1
     ;  N is Acc          %else, tambien se puede usar N = Acc + 1
     ).
@@ -62,7 +63,7 @@ insertarAlPrincipio( Elemento, Lista, [Elemento|Lista] ).
 
 
 
-map([], _, []).
+map([], _, _).
 map([H|T], F, [HO|TO]) :- 
     call(F, H, HO),
     map(T,F,TO).
@@ -105,7 +106,10 @@ pixrgb(X, Y, R, G, B, Depth, [X, Y, R, G, B, Depth]).
 % Meta Principal: pixhex
 % Metas Secundarias:
 % Tomamos los elementos y los ordenamos en una lista que asumirá el rol de pixel hex
-pixhex(X, Y, Hex, Depth, [X, Y, Hex, Depth]).
+makeList(X, Y, BH, Depth, [X, Y, BH, Depth]).
+pixhex(X, Y, Hex, Depth, PX):-
+    string(Hex),
+    makeList(X, Y, Hex, Depth, PX).
 
 
 % TDA - image
@@ -257,7 +261,7 @@ movePixBitH(Ancho, Pixel, PixelOut) :-
     caddr(Pixel, BH),
     cadddr(Pixel, Depth),
     (  Y+1 < Ancho
-    -> NewY is Y + 1     
+    -> NewY is Y    
     ;  NewY is 0
     ),
     (   string(BH) -> pixhex(X, NewY, BH, Depth, PixelOut)
@@ -328,8 +332,8 @@ movePixBitV(Alto, Pixel, PixelOut) :-
     cadr(Pixel, Y),
     caddr(Pixel, BH),
     cadddr(Pixel, Depth),
-    (  X + 1< Alto
-    -> NewX is X + 1     
+    (  X < Alto
+    -> NewX is X  + 1  
     ;  NewX is 0
     ),
     (   string(BH) -> pixhex(NewX, Y, BH, Depth, PixelOut)
@@ -353,7 +357,7 @@ movePixBitV(Alto, Pixel, PixelOut) :-
 movePixRgbV(Alto, Pixel, PixelOut) :-
     pixrgb(X, Y, R, G, B, Depth, Pixel),
     (  Y < Alto
-    -> NewY is Y + 1     
+    -> NewY is Y +1
     ;  NewY is 0
     ),
     pixrgb(X, NewY, R, G, B, Depth, PixelOut).
@@ -458,7 +462,7 @@ getInt(X, Y):-
     truncate(X, 0, Y).
 
 getDec(X, Y):-
-    (   X < 1 ->  getInt(X, Y)
+    (   X < 1 ->  truncate(X, 2, Y)
     ;   (	getInt(X, Int),
             Y is X - Int)).
 
@@ -471,8 +475,8 @@ rgbToHex(X, Y):-
     intToHex(NewDec, NewInt2),
     atom_concat(NewInt, NewInt2, Y).
 
-pixsRGBToHex([], Accum, Accum).
-pixsRGBToHex([PixIn|PixsIn], Accum, Output):-
+pixsRGBToHex([], _):-!.
+pixsRGBToHex([PixIn|PixsIn], [PixOut|PixsOut]):-
     pixrgb(X, Y, R, G, B, D, PixIn),
     rgbToHex(R, ROut),
     rgbToHex(G, GOut),
@@ -481,14 +485,51 @@ pixsRGBToHex([PixIn|PixsIn], Accum, Output):-
     atom_concat(NewR, GOut, NewG),
     atom_concat(NewG, BOut, RGB),
     pixhex(X, Y, RGB, D, PixOut),
-    insertarAlPrincipio(PixOut, Accum, NewAccum),
-    pixsRGBToHex(PixsIn, NewAccum, Output).
+    pixsRGBToHex(PixsIn, PixsOut).
 
 	
 imgRGBToHex(ImageIn, ImageOut):-
     image(Largo, Ancho, PixelsIn, ImageIn),
-    pixsRGBToHex(PixelsIn, [], PixelsOut),
+    pixsRGBToHex(PixelsIn, PixelsOut),
     image(Largo, Ancho, PixelsOut, ImageOut).
+
+
+%--------------histograma-----------------%
+%% usando include y exclude sale más rápido
+
+
+
+
+%-------------rotate90°-------------------%
+bitOrHexTranspose(PixIn, PixOut):-
+    car(PixIn, X),
+    cadr(PixIn, Y),
+    caddr(PixIn, BH),
+    cadddr(PixIn, Depth),
+    (   string(BH) ->  pixhex(Y, X, BH, Depth, PixOut)
+    ;   pixbit(Y, X, BH, Depth, PixOut)).
+pixCons(PixIn, PixOut):-
+    car(PixIn, X),
+    caddr(PixIn, Y),
+    contar(PixIn, N),
+    (   N == 4 ->  bitOrHexTranspose(PixIn, PixOut)
+    ;   (   caddr(PixIn, R),
+            cadddr(PixIn, G),
+            caddddr(PixIn, B),
+            cadddddr(PixIn, D),
+            pixrgb(Y, X, R, G, B, D, PixOut))).
+transpose([], _).
+transpose([PixIn|PixsIn], [PixOut|PixsOut]):-
+    car(PixIn, X),
+    cadr(PixIn, Y),
+    pixCons(PixIn, PixOut),
+    transpose(PixsIn, PixsOut).
+rotate90(Img1, Img2):-
+    image(Ancho, Largo, Pixslist, Img1),
+    transpose(Pixslist, PixsOut),
+    movePixelsHorizontally(Largo, PixsOut, PixsOutput),
+    image(Largo, Ancho, PixsOutput, Img2).
+    
 
 
 %pixelsAreBitmap([]).
@@ -524,4 +565,10 @@ moveImageHorizontally(I, B).
    pixbit( 1, 1, 1, 4, PD),
    image( 2, 2, [PA, PB, PC, PD], I),
    flipH(I, X).
+?- trace, (pixrgb( 0, 0, 255, 246, 255, 10, PA),
+   pixrgb( 1, 0, 250, 220, 145, 10, PB),
+   pixrgb( 0, 1, 234, 160, 130, 10, PC),
+   pixrgb( 1, 1, 240, 176, 135, 10, PD),
+      image( 2, 2, [PA, PB, PC, PD], I),
+      imgRGBToHex(I, X)).
 */

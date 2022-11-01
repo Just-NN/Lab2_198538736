@@ -72,8 +72,8 @@ car([X|_], X).
 cadr([_,Y|_], Y).
 caddr([_,_,R|_], R).
 cadddr([_,_,_,G|_], G).
-cadddr([_,_,_,_, B|_],B).
-caddddr([_,_,_,_,_, D|_], D).
+caddddr([_,_,_,_, B|_],B).
+cadddddr([_,_,_,_,_, D|_], D).
 
 
 
@@ -255,17 +255,6 @@ imageIsCompressed(Image):-
 % Básicamente rota todo hacia la derecha y, si es el último elemento, 
 % lo envía al inicio
 
-movePixBitH(Ancho, Pixel, PixelOut) :-
-    car(Pixel, X),
-    cadr(Pixel, Y),
-    caddr(Pixel, BH),
-    cadddr(Pixel, Depth),
-    (  Y+1 < Ancho
-    -> NewY is Y    
-    ;  NewY is 0
-    ),
-    (   string(BH) -> pixhex(X, NewY, BH, Depth, PixelOut)
-    ;   pixbit(X, NewY, BH, Depth, PixelOut)).
 
 
 
@@ -278,41 +267,30 @@ movePixBitH(Ancho, Pixel, PixelOut) :-
 % se mueve la posición en 1 hacia la derecha. Sino, el valor será 0
 % Básicamente rota todo hacia la derecha y, si es el último elemento, 
 % lo envía al inicio
-
-movePixRgbH(Ancho, Pixel, PixelOut) :-
-    pixrgb(X, Y, R, G, B, Depth, Pixel),
-    (  Y < Ancho
-    -> NewY is Y + 1     
-    ;  NewY is 0
+changePixel(X, PixIn, PixOut):-
+    cadr(PixIn, Y),
+    caddr(PixIn, BH),
+    cadddr(PixIn, Depth),
+    contar(PixIn, N),
+    (   N==4->  (   string(BH) ->  pixhex(X, Y, BH, Depth, PixOut)
+    			;   pixbit(X, Y, BH, Depth, PixOut))
+    ;   (   caddddr(PixIn, B),
+            cadddddr(PixIn, D),
+            pixrgb(X, Y, BH, Depth, B, D, PixOut))).
+flipPixels(_,_,[],_).
+flipPixels(W, W2, [PixIn|PixsIn], [PixOut|PixsOut]):-
+    changePixel(W, PixIn, PixOut),
+    (   W==0 ->  NewW is W2
+    ;   NewW is W-1
     ),
-    pixrgb(X, NewY, R, G, B, Depth, PixelOut).
+    flipPixels(NewW, W2, PixsIn, PixsOut).
 
-movePixelsBitHexH(_,[],_).
-movePixelsBitHexH(Ancho, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
-    movePixBitH(Ancho, PixelIn, PixelOut),
-    movePixelsBitHexH(Ancho, PixelsIn, PixelsOut).
+flipH(In, IOut):-
+    image(Largo, Ancho, Pixlist, In),
+    NewAncho is Ancho-1,
+    flipPixels(NewAncho, NewAncho, Pixlist, PixsOut),
+    image(Largo, Ancho, PixsOut, IOut).
 
-movePixelsRgbH(_,[],_).
-movePixelsRgbH(Ancho, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
-    movePixRgbH(Ancho, PixelIn, PixelOut),
-    movePixelsRgbH(Ancho, PixelsIn, PixelsOut).
-
-
-
-movePixelsHorizontally(_, [], _).
-movePixelsHorizontally(Ancho, [PixIn|PixsIn], [PixOut|PixsOut]) :-
-	contar(PixIn, N),
-    (   N == 4 ->  movePixelsBitHexH(Ancho, [PixIn|PixsIn], [PixOut|PixsOut])
-    ;   movePixelsRgbH(Ancho, [PixIn|PixsIn], [PixOut|PixsOut])
-    ),
-    movePixelsHorizontally(Ancho, PixsIn, PixsOut).
-    
-    
-
-flipH(ImageIn, ImageOut) :-
-    image(Largo, Ancho, PixelsIn, ImageIn),
-    movePixelsHorizontally(Ancho, PixelsIn, PixelsOut),
-	image(Largo, Ancho, PixelsOut, ImageOut).
 
 
 %---------------------------------------------
@@ -327,19 +305,6 @@ flipH(ImageIn, ImageOut) :-
 % Básicamente rota todo hacia la derecha y, si es el último elemento, 
 % lo envía al inicio
 
-movePixBitV(Alto, Pixel, PixelOut) :-
-    car(Pixel, X),
-    cadr(Pixel, Y),
-    caddr(Pixel, BH),
-    cadddr(Pixel, Depth),
-    (  X < Alto
-    -> NewX is X  + 1  
-    ;  NewX is 0
-    ),
-    (   string(BH) -> pixhex(NewX, Y, BH, Depth, PixelOut)
-    ;   pixbit(NewX, Y, BH, Depth, PixelOut)).
-
-
 
 
 
@@ -354,39 +319,31 @@ movePixBitV(Alto, Pixel, PixelOut) :-
 % Básicamente rota todo hacia la derecha y, si es el último elemento, 
 % lo envía al inicio
 
-movePixRgbV(Alto, Pixel, PixelOut) :-
-    pixrgb(X, Y, R, G, B, Depth, Pixel),
-    (  Y < Alto
-    -> NewY is Y +1
-    ;  NewY is 0
+changePixelV(Y, PixIn, PixOut):-
+    car(PixIn, X),
+    caddr(PixIn, BH),
+    cadddr(PixIn, Depth),
+    contar(PixIn, N),
+    (   N==4->  (   string(BH) ->  pixhex(X, Y, BH, Depth, PixOut)
+    			;   pixbit(X, Y, BH, Depth, PixOut))
+    ;   (   caddddr(PixIn, B),
+            cadddddr(PixIn, D),
+            pixrgb(X, Y, BH, Depth, B, D, PixOut))).
+flipPixelsV(_,_,[],_).
+flipPixelsV(W, W2, [PixIn|PixsIn], [PixOut|PixsOut]):-
+    changePixelV(W, PixIn, PixOut),
+    (   W==0 ->  NewW is W2
+    ;   NewW is W-1
     ),
-    pixrgb(X, NewY, R, G, B, Depth, PixelOut).
+    flipPixelsV(NewW, W2, PixsIn, PixsOut).
 
-movePixelsBitHexV(_,[],_).
-movePixelsBitHexV(Alto, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
-    movePixBitV(Alto, PixelIn, PixelOut),
-    movePixelsBitHexV(Alto, PixelsIn, PixelsOut).
-
-movePixelsRgbV(_,[],_).
-movePixelsRgbV(Alto, [PixelIn|PixelsIn], [PixelOut|PixelsOut]):-
-    movePixRgbV(Alto, PixelIn, PixelOut),
-    movePixelsRgbV(Alto, PixelsIn, PixelsOut).
-
-
-
-movePixelsVertically(_, [], _).
-movePixelsVertically(Alto, [PixIn|PixsIn], [PixOut|PixsOut]) :-
-	contar(PixIn, N),
-    (   N == 4 ->  movePixelsBitHexV(Alto, [PixIn|PixsIn], [PixOut|PixsOut])
-    ;   movePixelsRgbV(Alto, [PixIn|PixsIn], [PixOut|PixsOut])
-    ),
-    movePixelsVertically(Alto, PixsIn, PixsOut).
     
     
 
 flipV(ImageIn, ImageOut) :-
     image(Largo, Ancho, PixelsIn, ImageIn),
-    movePixelsVertically(Ancho, PixelsIn, PixelsOut),
+    NewLargo is Largo-1,
+    flipPixelsV(NewLargo, NewLargo, PixelsIn, PixelsOut),
 	image(Largo, Ancho, PixelsOut, ImageOut).
 
 
@@ -520,14 +477,13 @@ pixCons(PixIn, PixOut):-
             pixrgb(Y, X, R, G, B, D, PixOut))).
 transpose([], _).
 transpose([PixIn|PixsIn], [PixOut|PixsOut]):-
-    car(PixIn, X),
-    cadr(PixIn, Y),
     pixCons(PixIn, PixOut),
     transpose(PixsIn, PixsOut).
 rotate90(Img1, Img2):-
     image(Ancho, Largo, Pixslist, Img1),
     transpose(Pixslist, PixsOut),
-    movePixelsHorizontally(Largo, PixsOut, PixsOutput),
+    NewAncho is Ancho-1,
+    flipPixels(NewAncho, NewAncho, PixsOut, PixsOutput),
     image(Largo, Ancho, PixsOutput, Img2).
     
 

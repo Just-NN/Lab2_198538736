@@ -1,8 +1,7 @@
-% Dominio: 
-%
-% Meta Principal:
-% Metas Secundarias:
 
+/* Para definir los TDA, se consideran los siguientes:
+	pixbit, pixhex, pixrgb e image.
+	A continuación, se detallan sus constructores y predicados.
 
 % Contar elementos
 % Dominio: lista (de cualquier tipo) X N (int)
@@ -13,6 +12,8 @@
 % Su condición base será si la lista es nula, por lo que no se entrega nada
 
 
+
+%------------ Reglas generales que sirven en los TDA-------------
 %contar([], 0).
 %contar(ListaIn, N).
 %contar([1,2,3], N).
@@ -78,7 +79,9 @@ cadddr([_,_,_,G|_], G).
 caddddr([_,_,_,_, B|_],B).
 cadddddr([_,_,_,_,_, D|_], D).
 
-
+% Considerando que los pixeles funcionan de manera similar a una lista
+% es fácil imaginar que estas reglas servirán para los primeros 4 elementos en caso de 
+% ser pixhex o pixbit (su largo es 4) y el resto servirán sólo para pixrgb u otras listas.
 
 % ---------------------------------------------------------
 % Hasta aquí, han sido sólo metas que podríamos utilizar

@@ -398,9 +398,21 @@ crop(X1, Y1, X2, Y2, ImageIn, ImageOut):-
     image(Largo, Ancho, PixelsOut, ImageOut).
 
 %---------------------------------------------------- rgb to hex
+% Aquí empiezan las metas para convertir rgb a hex
+
+% Dominio: X (number) X N (int) X Result (number)
 %
+% Meta Principal: truncate
+% Metas Secundarias: floor
+% Descripción: en resumen, se considera un parámetro X
+% que se truncará a una cantidad de N decimales y esto corresponderá
+% a Result
 truncate(X,N,Result):- X >= 0, Result is floor(10^N*X)/10^N, !.
 
+% Dominio: X (int) X Y(char)
+%
+% Meta Principal:intToHex
+% Metas Secundarias: no aplica
 
 intToHex(X, Y):-
     (   X==0 ->  Y = "0"
@@ -438,13 +450,34 @@ intToHex(X, Y):-
     ;   X==15.0 ->  Y = "F"
     ;   X==16.0 ->  Y = "G").
 
+% Dominio: X (number) X Y (int)
+%
+% Meta Principal: getInt
+% Metas Secundarias:truncate
+% Descripción: Y corresponderá a la parte entera de X
+
 getInt(X, Y):-
     truncate(X, 0, Y).
+
+% Dominio: X (number) X Y (int)
+%
+% Meta Principal: getDec
+% Metas Secundarias: truncate, getInt
+% Descripción: Y corresponderá a la parte decimal de X
 
 getDec(X, Y):-
     (   X < 1 ->  truncate(X, 2, Y)
     ;   (	getInt(X, Int),
             Y is X - Int)).
+
+% Dominio: X (int) X Y (string)
+%
+% Meta Principal: rgbToHex
+% Metas Secundarias: getInt, getDec,m intToHex, atom_concat
+% Descripción: se considera un numero X que será dividido por 16, 
+% para luego tomar su parte entera y su parte decimal.
+% De esta forma, se convierten a hex ambos valores siguiendo 
+% los valores correspondientes
 
 rgbToHex(X, Y):-
     X1 is X/16,
@@ -454,6 +487,13 @@ rgbToHex(X, Y):-
     NewDec is Dec*16,
     intToHex(NewDec, NewInt2),
     atom_concat(NewInt, NewInt2, Y).
+
+% Dominio: PixsIn (lista de pixbit|pixrgb|pixhex) X PixsOut (lista de pixbit|pixrgb|pixhex)
+%
+% Meta Principal:pixsRGBToHex
+% Metas Secundarias: pixrgb, rgbToHex, atom_concat, pixhex
+% Descripción: se aplica el proceso descrito hasta ahora para cada pixelsAreHexmap
+% Caso base: lista vacía
 
 pixsRGBToHex([], _):-!.
 pixsRGBToHex([PixIn|PixsIn], [PixOut|PixsOut]):-
@@ -467,7 +507,13 @@ pixsRGBToHex([PixIn|PixsIn], [PixOut|PixsOut]):-
     pixhex(X, Y, RGB, D, PixOut),
     pixsRGBToHex(PixsIn, PixsOut).
 
-	
+% Dominio: ImageIn(image) X ImageOut(image)
+%
+% Meta Principal: imgRGBToHex
+% Metas Secundarias: image, pixsRGBToHex
+% Descripción: Se considera la regla anterior para la lista de pixeles dada por la imagen 
+% de entrada, para así poder obtener la de salida
+
 imgRGBToHex(ImageIn, ImageOut):-
     image(Largo, Ancho, PixelsIn, ImageIn),
     pixsRGBToHex(PixelsIn, PixelsOut),
@@ -475,7 +521,16 @@ imgRGBToHex(ImageIn, ImageOut):-
 
 
 %--------------histograma-----------------%
-%% usando include y exclude sale más rápido
+% Desde aquí, empiezan las metas para el histograma
+
+% Dominio: A (pixbit|pixhex|pixrgb) X B(pixbit|pixhex|pixrgb) 
+%
+% Meta Principal: pixCheck
+% Metas Secundarias: caddr, contar, cadddr
+% Descripción: Consiste en comparar los valores de 2 pixeles.
+% Dependiendo de la cantidad de elementos, se compararán
+% el 3er elemento o R, G y B.
+
 pixCheck(A, B):-
     caddr(A, ABH),
     caddr(B, BBH),
@@ -487,7 +542,20 @@ pixCheck(A, B):-
             cadddr(B, BB),
             AG == BG,
             AB == BB)).
+
+% Dominio: A (variable) X B (variable)
+%
+% Meta Principal: cons
+% Metas Secundarias: no aplica
+% Descripción: se considera un par de elementos dados
+
 cons(A, B, [A,B]).
+
+% Dominio: Pix (pixbit|pixrgb|pixhex) X RGB (string)
+%
+% Meta Principal: getRGB
+% Metas Secundarias: caddr, cadddr, caddddr, atom_concat
+% Descripción: Se arma un string con los valores RGB del pixel
 
 getRGB(Pix, RGB):-
     caddr(Pix, R),
@@ -497,6 +565,17 @@ getRGB(Pix, RGB):-
     atom_concat(Rcoma, G, RG),
     atom_concat(RG, ", ", RGcoma),
     atom_concat(RGcoma, B, RGB).
+
+% Dominio: PixsIn(lista de pixbit|pixhex|pixrgb) X PixsIn(lista de pixbit|pixhex|pixrgb)
+%
+% Meta Principal: histogram
+% Metas Secundarias: contar, getRGB, include, cons, exclude
+% Descripción: se separan los casos para pixbit/hex y pixrgb
+% dependiendo del largo, reconociendo su 3er valor para así
+% poder considerar una lista sólo con los elementos que sean equivalentes
+% y finalmente contarlos para calcular su frecuencia. Posterior a ello, se arma
+% un par con el valor y la frecuencia, y esto se unificaría como el pixel de salida en la lista
+% para luego borrar todos los pixeles cuyos valores
 
 histogram([], _).
 histogram([PixIn|PixsIn], [PixOut|PixsOut]):-
@@ -513,6 +592,14 @@ histogram([PixIn|PixsIn], [PixOut|PixsOut]):-
 
 
 %-------------rotate90°-------------------%
+% Desde aquí empiezan las metas para rotate90
+
+% Dominio: PixsIn (pixbit|pixhex|pixrgb) X PixOut (pixbit|pixhex|pixrgb)
+%
+% Meta Principal: bitOrHexTranspose
+% Metas Secundarias: car, cadr, caddr, cadddr, string, pixhex, pixbit
+% Descripción: se toman los valores del pixel para cambiar de orden las coordenadas X e Y
+
 bitOrHexTranspose(PixIn, PixOut):-
     car(PixIn, X),
     cadr(PixIn, Y),
@@ -520,6 +607,13 @@ bitOrHexTranspose(PixIn, PixOut):-
     cadddr(PixIn, Depth),
     (   string(BH) ->  pixhex(Y, X, BH, Depth, PixOut)
     ;   pixbit(Y, X, BH, Depth, PixOut)).
+
+% Dominio: PixsIn (pixbit|pixhex|pixrgb) X PixOut (pixbit|pixhex|pixrgb)
+%
+% Meta Principal: pixCons
+% Metas Secundarias: car, caddr, cadddr, caddddr, cadddddr, contar, bitOrHexTranspose, pixrgb
+% Descripción: Se sigue la idea anterior para generalizar los casos
+
 pixCons(PixIn, PixOut):-
     car(PixIn, X),
     caddr(PixIn, Y),
@@ -530,10 +624,29 @@ pixCons(PixIn, PixOut):-
             caddddr(PixIn, B),
             cadddddr(PixIn, D),
             pixrgb(Y, X, R, G, B, D, PixOut))).
+
+% Dominio: PixsIn(lista de pixbit|pixhex|pixrgb) X PixsIn(lista de pixbit|pixhex|pixrgb)
+%
+% Meta Principal: transpose
+% Metas Secundarias: pixCons, transpose
+% Descripción: se repite la meta anterior con el fin de que cada pixel tenga
+% sus coordenadas X e Y cambiadas
+
 transpose([], _).
 transpose([PixIn|PixsIn], [PixOut|PixsOut]):-
     pixCons(PixIn, PixOut),
     transpose(PixsIn, PixsOut).
+
+% Dominio: Img1(image) X Img2(image)
+%
+% Meta Principal: rotate90
+% Metas Secundarias: image, transpose, flipPixels
+% Descripción: Se considera una imagen de entrada,
+% para luego transponer sus posiciones y, posterior a ello,
+% voltear horizontalmente dichas posiciones.
+% Esto sería equivalente a rotar las posiciones en 90° y se
+% utiliza la lista de pixeles de salida para la nueva imagen
+
 rotate90(Img1, Img2):-
     image(Ancho, Largo, Pixslist, Img1),
     transpose(Pixslist, PixsOut),
@@ -543,10 +656,4 @@ rotate90(Img1, Img2):-
     
 
 
-%pixelsAreBitmap([]).
-%pixelsAreBitmap([Pixbit | Rest]) :-
-%    pixbit(_, _, Bit, _, Pixbit),
-%    (Bit == 0 ; Bit == 1),
-%    pixelsAreBitmap(Rest).
- 
 

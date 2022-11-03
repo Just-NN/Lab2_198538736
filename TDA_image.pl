@@ -23,25 +23,6 @@ contar([_|Resto], N) :-
 
 
 
-% contarSoloNumeros([1,2,3, "a"], N).
-% Dominio: lista (de cualquier tipo) X N (int)
-%
-% Meta Principal: contarSoloNumeros
-% Metas Secundarias: 
-% Utilizaremos una recursión similar a la de contar, pero
-% filtraremos sólo elementos que correspondan a números
-% Si es de tipo number, se suma
-% sino, se pasa al siguiente elemento
-% Mismo caso base que contar
-contarSoloNumeros([],0).
-contarSoloNumeros([Elemento|Resto], N) :- 
-    contarSoloNumeros(Resto, Acc),
-    (  number(Elemento)  %if
-    
-    -> N is Acc + 1      %then, tambien se puede usar N = Acc + 1
-    ;  N is Acc          %else, tambien se puede usar N = Acc + 1
-    ).
-
 % Insertar elemento 
 % Dominio: Elemento (cualquier tipo) X Lista (cualquier tipo)
 %
@@ -51,24 +32,17 @@ contarSoloNumeros([Elemento|Resto], N) :-
 insertarAlPrincipio( Elemento, [], [Elemento] ).
 insertarAlPrincipio( Elemento, Lista, [Elemento|Lista] ).
 
-% Map 
-% Dominio: lista (cualquier tipo) X F (regla) X lista de salida (cualquier tipo)
+% car
+% Dominio: lista (cualquier tipo) X X (atomo)
 %
-% Meta Principal: Map
-% Metas Secundarias: call
-% Utilizando una recursión, le daremos uso a call también
-% para aplicar una meta al elemento de la lista y
-% añadirlo a la lista que mostraremos
-% map([1,2,3], plus(1), X).
+% Meta Principal: car
+% Metas Secundarias: no aplica
+% Se toma una lista, cuyo primer elemento será X
 
-
-
-map([], _, _).
-map([H|T], F, [HO|TO]) :- 
-    call(F, H, HO),
-    map(T,F,TO).
 
 car([X|_], X).
+
+
 cadr([_,Y|_], Y).
 caddr([_,_,R|_], R).
 cadddr([_,_,_,G|_], G).
@@ -465,20 +439,26 @@ pixCheck(A, B):-
             AG == BG,
             AB == BB)).
 cons(A, B, [A,B]).
-incluir(_, [], _).
-incluir(Pix, [PixIn|PixsIn], [PixOut|PixsOut]):-
-    (   pixCheck(Pix, PixIn) ->  PixOut is 1
-    ;   PixOut = 'a'
-    ),
-    incluir(Pix, PixsIn, PixsOut).
+
+getRGB(Pix, RGB):-
+    caddr(Pix, R),
+    cadddr(Pix, G),
+    caddddr(Pix, B),
+    atom_concat(R, ", ", Rcoma),
+    atom_concat(Rcoma, G, RG),
+    atom_concat(RG, ", ", RGcoma),
+    atom_concat(RGcoma, B, RGB).
 
 histogram([], _).
 histogram([PixIn|PixsIn], [PixOut|PixsOut]):-
-    caddr(PixIn, BH),
+    contar(PixIn, Len),
+    (   Len == 4 ->  caddr(PixIn, BH)
+    ;   getRGB(PixIn, BH)
+    ),
     include(pixCheck(PixIn), PixsIn, P1),
     contar(P1, N),
-    NewBH is BH+1,
-	cons(NewBH, N, PixOut),
+    NewN is N+1,
+	cons(BH, NewN, PixOut),
     exclude(pixCheck(PixIn), PixsIn, P2),
     histogram(P2, PixsOut).
 

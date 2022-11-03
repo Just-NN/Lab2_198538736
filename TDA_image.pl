@@ -1,7 +1,7 @@
 
 /* Para definir los TDA, se consideran los siguientes:
 	pixbit, pixhex, pixrgb e image.
-	A continuación, se detallan sus constructores y predicados.
+	A continuación, se detallan sus constructores y predicados.*/
 
 % Contar elementos
 % Dominio: lista (de cualquier tipo) X N (int)

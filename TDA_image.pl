@@ -251,8 +251,8 @@ imageIsCompressed(Image):-
 % Meta Principal: changePixel
 % Metas Secundarias: cadr, caddr, cadddr, caddddr, cadddddr,
 % 					 contar, string, pixhex, pixbit, pixrgb
-% Cambia la posición X por la posición Y para el pixel ingresado, 
-%
+% Cambia la posición X del pixel ingresado por
+% un nuevo valor
 
 changePixel(X, PixIn, PixOut):-
     cadr(PixIn, Y),
@@ -264,6 +264,15 @@ changePixel(X, PixIn, PixOut):-
     ;   (   caddddr(PixIn, B),
             cadddddr(PixIn, D),
             pixrgb(X, Y, BH, Depth, B, D, PixOut))).
+
+%
+% Dominio: W (int) X W2 (int) X PixlistIn (pixbit|pixhex|pixrgb) X PixlistOut (pixbit|pixhex|pixrgb) 
+%
+% Meta Principal: flipPixels
+% Metas Secundarias: changePixel
+% Descripción: se cambia la posición de los pixeles de acuerdo al ancho de la imagen, de modo
+% que queden volteadas horizontalmente
+
 flipPixels(_,_,[],_).
 flipPixels(W, W2, [PixIn|PixsIn], [PixOut|PixsOut]):-
     changePixel(W, PixIn, PixOut),
@@ -271,6 +280,13 @@ flipPixels(W, W2, [PixIn|PixsIn], [PixOut|PixsOut]):-
     ;   NewW is W-1
     ),
     flipPixels(NewW, W2, PixsIn, PixsOut).
+
+% Dominio: In (image) X IOut (image)
+%
+% Meta Principal: flipH
+% Metas Secundarias: image, flipPixels
+% Descripción: se considera una nueva imagen que reconocerá como lista de pixeles
+% a la lista original, pero volteada horizontalmente
 
 flipH(In, IOut):-
     image(Largo, Ancho, Pixlist, In),
@@ -281,30 +297,18 @@ flipH(In, IOut):-
 
 
 %---------------------------------------------
-% alto es X
-% movePixBitH
-% Dominio: Ancho (int), Pixel (pixbit| pixhex| pixrgb)
+% Estas serían las metas para el flip vertical, que es 
+% casi igual al horizontal
+
+
+
+% Dominio: Y (int) X PixIn (pixbit|pixhex|pixrgb) X PixOut(pixbit|pixhex|pixrgb)
 %
-% Meta Principal: movePixBitH
-% Metas Secundarias: pixbit
-% Comprueba si el ancho está dentro del rango y, en ese caso
-% se mueve la posición en 1 hacia la derecha. Sino, el valor será 0
-% Básicamente rota todo hacia la derecha y, si es el último elemento, 
-% lo envía al inicio
-
-
-
-
-
-%
-% Dominio: Ancho (int), Pixel (pixbit| pixhex| pixrgb)
-%
-% Meta Principal: movePixRgbH
-% Metas Secundarias: pixrgb
-% Comprueba si el ancho está dentro del rango y, en ese caso
-% se mueve la posición en 1 hacia la derecha. Sino, el valor será 0
-% Básicamente rota todo hacia la derecha y, si es el último elemento, 
-% lo envía al inicio
+% Meta Principal: changePixelV
+% Metas Secundarias: cadr, caddr, cadddr, caddddr, cadddddr,
+% 					 contar, string, pixhex, pixbit, pixrgb
+% Cambia la posición Y del pixel ingresado por
+% un nuevo valor
 
 changePixelV(Y, PixIn, PixOut):-
     car(PixIn, X),
@@ -316,6 +320,15 @@ changePixelV(Y, PixIn, PixOut):-
     ;   (   caddddr(PixIn, B),
             cadddddr(PixIn, D),
             pixrgb(X, Y, BH, Depth, B, D, PixOut))).
+
+%
+% Dominio: W (int) X W2 (int) X PixlistIn (pixbit|pixhex|pixrgb) X PixlistOut (pixbit|pixhex|pixrgb) 
+%
+% Meta Principal: flipPixelsV
+% Metas Secundarias: changePixelV
+% Descripción: se cambia la posición de los pixeles de acuerdo al largo de la imagen, de modo
+% que queden volteadas verticalmente
+
 flipPixelsV(_,_,[],_).
 flipPixelsV(W, W2, [PixIn|PixsIn], [PixOut|PixsOut]):-
     changePixelV(W, PixIn, PixOut),
@@ -324,9 +337,13 @@ flipPixelsV(W, W2, [PixIn|PixsIn], [PixOut|PixsOut]):-
     ),
     flipPixelsV(NewW, W2, PixsIn, PixsOut).
 
-    
-    
-
+% Dominio: In (image) X IOut (image)
+%
+% Meta Principal: flipV
+% Metas Secundarias: image, flipPixels
+% Descripción: se considera una nueva imagen que reconocerá como lista de pixeles
+% a la lista original, pero volteada verticalmente   
+   
 flipV(ImageIn, ImageOut) :-
     image(Largo, Ancho, PixelsIn, ImageIn),
     NewLargo is Largo-1,
@@ -335,7 +352,12 @@ flipV(ImageIn, ImageOut) :-
 
 
 %----------------------------- crop ---------
+% Desde aquí empiezan metas para realizar el crop
 
+% Dominio: X1 (int) X Y1 (int) X X2 (int) X Y2 (int) X Pix (pixbit|pixhex|pixrgb)
+%
+% Meta Principal: inRange
+% Metas Secundarias: car, cadr
 
 
 inRange(X1, Y1, X2, Y2, Pix):-
@@ -344,18 +366,31 @@ inRange(X1, Y1, X2, Y2, Pix):-
         X >= X1,
     	X =< X2,
     	Y >= Y1,
-    	Y =< Y2
-    	.
+    	Y =< Y2.
     
-    
+% Dominio: X1 (int) X Y1 (int) X X2 (int) X Y2 (int) X Pixlist (lista de pixbit|pixhex|pixrgb) X 
+%		   Accum (lista de pixbit|pixhex|pixrgb) X Output (lista de pixbit|pixhex|pixrgb)
+%
+% Meta Principal: cropPixels
+% Metas Secundarias: insertarAlPrincipio
+% Descripción: se consideran las coordenadas dentro del rango, checkeadas por inRange 
+% para poder agregar a los pixeles que cumplan dentro del acumulador y, finalmente,
+% considerarlo como el Output de la regla.
 
 cropPixels(_, _, _, _, [], Accum, Accum).
 cropPixels(X1, Y1, X2, Y2, [PixIn|PixsIn], Accum, Output):-
     (   inRange(X1, Y1, X2, Y2, PixIn) ->	insertarAlPrincipio(PixIn, Accum, NewAccum)
     ;  NewAccum = Accum
     ),
-    cropPixels(X1, Y1, X2, Y2, PixsIn, NewAccum, Output)
-    .
+    cropPixels(X1, Y1, X2, Y2, PixsIn, NewAccum, Output).
+
+% Dominio: X1 (int) X Y1 (int) X X2 (int) X Y2 (int) X ImageIn (image) X ImageOut(image)
+%
+% Meta Principal: crop
+% Metas Secundarias: image, cropPixels
+% Descripción: al igual que otras reglas, ésta ocupa las metas secundarias previamente para
+% considerar una lista de pixeles bajo los criterios dados. En este caso, los pixeles dentro
+% del rango solicitado en cada llamado
     
 crop(X1, Y1, X2, Y2, ImageIn, ImageOut):-
 	image(Largo, Ancho, PixelsIn, ImageIn),
@@ -363,6 +398,7 @@ crop(X1, Y1, X2, Y2, ImageIn, ImageOut):-
     image(Largo, Ancho, PixelsOut, ImageOut).
 
 %---------------------------------------------------- rgb to hex
+%
 truncate(X,N,Result):- X >= 0, Result is floor(10^N*X)/10^N, !.
 
 
@@ -514,36 +550,3 @@ rotate90(Img1, Img2):-
 %    pixelsAreBitmap(Rest).
  
 
-/** <examples>
-?- pixbit( 0, 0, 1, 10, PA),
-pixbit( 0, 1, 0, 20, PB), 
-pixbit( 1, 0, 0, 30, PC), 
-pixbit( 1, 1, 1, 4, PD),
-image( 2, 2, [PA, PB, PC, PD], I),
-moveH(I, X),
-moveImageHorizontally(I, B).
-?- pixbit( 0, 0, 1, 10, PA),
-   pixbit( 0, 1, 0, 20, PB), 
-   pixbit( 1, 0, 0, 30, PC), 
-   pixbit( 1, 1, 1, 4, PD),
-   image( 2, 2, [PA, PB, PC, PD], I),
-   moveH(I, X).
-?- pixbit( 0, 0, 1, 10, PA),
-   pixbit( 0, 1, 0, 20, PB), 
-   pixbit( 1, 0, 0, 30, PC), 
-   pixbit( 1, 1, 1, 4, PD),
-   image( 2, 2, [PA, PB, PC, PD], I),
-   moveH(I, X).
-?- pixbit( 0, 0, 1, 10, PA),
-   pixbit( 0, 1, 0, 20, PB), 
-   pixbit( 1, 0, 0, 30, PC), 
-   pixbit( 1, 1, 1, 4, PD),
-   image( 2, 2, [PA, PB, PC, PD], I),
-   flipH(I, X).
-?- trace, (pixrgb( 0, 0, 255, 246, 255, 10, PA),
-   pixrgb( 1, 0, 250, 220, 145, 10, PB),
-   pixrgb( 0, 1, 234, 160, 130, 10, PC),
-   pixrgb( 1, 1, 240, 176, 135, 10, PD),
-      image( 2, 2, [PA, PB, PC, PD], I),
-      imgRGBToHex(I, X)).
-*/

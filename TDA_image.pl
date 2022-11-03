@@ -39,27 +39,57 @@ insertarAlPrincipio( Elemento, Lista, [Elemento|Lista] ).
 % Metas Secundarias: no aplica
 % Se toma una lista, cuyo primer elemento será X
 
-
 car([X|_], X).
 
+% cadr
+% Dominio: lista (cualquier tipo) X Y (atomo)
+%
+% Meta Principal: cadr
+% Metas Secundarias: no aplica
+% Se toma una lista, cuyo segundo elemento será Y
 
 cadr([_,Y|_], Y).
+
+% caddr
+% Dominio: lista (cualquier tipo) X R (atomo)
+%
+% Meta Principal: caddr
+% Metas Secundarias: no aplica
+% Se toma una lista, cuyo tercer elemento será R
+
 caddr([_,_,R|_], R).
+
+% cadddr
+% Dominio: lista (cualquier tipo) X G (atomo)
+%
+% Meta Principal: cadddr
+% Metas Secundarias: no aplica
+% Se toma una lista, cuyo cuarto elemento será G
+
 cadddr([_,_,_,G|_], G).
+
+% caddddr
+% Dominio: lista (cualquier tipo) X B (atomo)
+%
+% Meta Principal: caddddr
+% Metas Secundarias: no aplica
+% Se toma una lista, cuyo quinto elemento será D
+
 caddddr([_,_,_,_, B|_],B).
 cadddddr([_,_,_,_,_, D|_], D).
 
 
 
-
+% ---------------------------------------------------------
 % Hasta aquí, han sido sólo metas que podríamos utilizar
 % como secundarias para las solicitadas por enunciado
-
+% ---------------------------------------------------------
+% 
 % pixbit
 % Dominio: X (int) X Y (int) X Bit (1|0) X Depth (int) X lista
 %
 % Meta Principal: pixbit
-% Metas Secundarias:
+% Metas Secundarias: no aplica
 % Tomamos los elementos y los ordenamos en una lista que asumirá el rol de pixel bit
 
 pixbit(X, Y, Bit, Depth, [X, Y, Bit, Depth]).
@@ -69,7 +99,7 @@ pixbit(X, Y, Bit, Depth, [X, Y, Bit, Depth]).
 % Dominio: X (int) X Y (int) X R (int) X G (int) X B (int) X Depth (int) X lista
 %
 % Meta Principal: pixbit
-% Metas Secundarias:
+% Metas Secundarias:no aplica
 % Tomamos los elementos y los ordenamos en una lista que asumirá el rol de pixel rgb
 
 pixrgb(X, Y, R, G, B, Depth, [X, Y, R, G, B, Depth]).
@@ -78,47 +108,27 @@ pixrgb(X, Y, R, G, B, Depth, [X, Y, R, G, B, Depth]).
 % Dominio: X (int) X Y (int) X Hex (string) X Depth (int) X lista
 %
 % Meta Principal: pixhex
-% Metas Secundarias:
+% Metas Secundarias: no aplica
 % Tomamos los elementos y los ordenamos en una lista que asumirá el rol de pixel hex
-makeList(X, Y, BH, Depth, [X, Y, BH, Depth]).
-pixhex(X, Y, Hex, Depth, PX):-
-    string(Hex),
-    makeList(X, Y, Hex, Depth, PX).
+pixhex(X, Y, Hex, Depth, [X, Y, Hex, Depth]).
 
 
 % TDA - image
 % Dominio: Largo (int) X Ancho (int) X Pixeles (pixrgb|pixbit|pixhex) X lista (cualquier tipo)
 %
 % Meta Principal: image
-% Metas Secundarias:
+% Metas Secundarias: no aplica
 % Tomamos los elementos y los ordenamos en una lista que asumirá el rol de image
 
 image(Largo, Ancho, Pixeles, [Largo, Ancho, Pixeles]).
 
-% CONSULTAS DE TESTEO
-%pixbit( 0, 0, 1, 10, PA),
-%pixbit( 0, 1, 0, 20, PB), 
-%pixbit( 1, 0, 0, 30, PC), 
-%pixbit( 1, 1, 1, 4, PD),
-%image( 2, 2, [PA, PB, PC, PD], I),
-%imageTobitmap(I).
-%
-% I = [2, 2, [[0, 0, 1, 10], [0, 1, 0, 20], [1, 0, 0, 30], [1, 1, 1, 4]]]
-%image(Largo, Ancho, Pixeles, [2, 2, [[0, 0, 1, 10], [0, 1, 0, 20], [1, 0, 0, 30], [1, 1, 1, 4]]]).
-%Pixeles = [[0, 0, 1, 10], [0, 1, 0, 20], [1, 0, 0, 30], [1, 1, 1, 4]]]
-% [Pixel|Rest] = [[0, 0, 1, 10], [0, 1, 0, 20], [1, 0, 0, 30], [1, 1, 1, 4]].
-%nth0(1, [[0, 0, 1, 10], [0, 1, 0, 20], [1, 0, 0, 30], [1, 1, 1, 4]], Pixel).
-%nth0(1, [0, 0, 1, 10], PixelValue),
-%is_boolean(PixelValue).
-
-%( condition -> then_clause ; else_clause )
-
-
+% ------------------------------- Pertenencia de los 3 TDA de pixel
+% (pixhex, pixbit y pixrgb)
 % pixelsAreHexmap
 % Dominio: Hex (lista de pixhex)
 %
 % Meta Principal: pixelsAreHexmap
-% Metas Secundarias: pixhex
+% Metas Secundarias: pixhex, string
 % Caso base: la lista está vacía, se corta la recursión
 % Cualquier otro, se recorre elemento a elemento, comprobando que sea
 % de tipo hex, comprobando que su valor Hex sea un string (puesto que es el único pixel que contiene string
@@ -169,13 +179,15 @@ pixelsAreRGBmap([Pixbit | Rest]) :-
 
 
 %------------------------------------------------------------------------------
+% Aquí empieza la pertenencia del TDA image
+% 
+% 
 
-% imageTobitmap?
-% Dominio: Image (image)
+
+% Dominio: Pixel(pixbit)
 %
-% Meta Principal: imageTobitmap?
-% Metas Secundarias: pixelsAreBitmap
-% Utiliza Pixels para comprobar que sus elementos sean de tipo pixbit
+% Meta Principal: bit
+% Metas Secundarias: no aplica
 
 
 bit(Pixel):-
@@ -185,6 +197,13 @@ bit(Pixel):-
     (   N == 4).
     
 
+% imageTobitmap?
+% Dominio: Image (image)
+%
+% Meta Principal: imageTobitmap?
+% Metas Secundarias: pixelsAreBitmap, bit, image
+% Utiliza Pixels para comprobar que sus elementos sean de tipo pixbit
+
 imageTobitmap(Image) :-
     image(_, _, Pixels, Image),
     maplist(bit, Pixels).
@@ -193,7 +212,7 @@ imageTobitmap(Image) :-
 % Dominio: Image (image)
 %
 % Meta Principal: imageTohexmap?
-% Metas Secundarias: pixelsAreHexmap
+% Metas Secundarias: pixelsAreHexmap, image
 % Utiliza Pixels para comprobar que sus elementos sean de tipo hex
 
 imageTohexmap(Image):-
@@ -205,12 +224,19 @@ imageTohexmap(Image):-
 % Dominio: Image (image)
 %
 % Meta Principal: imageTorgbmap?
-% Metas Secundarias: pixelsAreRGBmap
+% Metas Secundarias: pixelsAreRGBmap, image
 % Utiliza Pixels para comprobar que sus elementos sean de tipo rgb
 
 imageTorgbmap(Image):-
 	image(_, _, Pixels, Image),
 	pixelsAreRGBmap(Pixels).
+
+% Dominio: Image (image)
+%
+% Meta Principal: imageIsCompressed
+% Metas Secundarias: image, contar
+% Decripción: revisa si la cantidad de elementos concuerda con
+% las dimensiones dadas para la imagen
 
 imageIsCompressed(Image):-
     image(Largo, Ancho, Pixeles, Image),
@@ -218,29 +244,16 @@ imageIsCompressed(Image):-
     Largo*Ancho > N.
 
 %---------------------------------------------
-% ancho es Y
-% movePixBitH
-% Dominio: Ancho (int), Pixel (pixbit| pixhex| pixrgb)
+% Aquí empiezan reglas para modificar los pixeles
+
+% Dominio: X (int) X PixIn (pixbit|pixhex|pixrgb) X PixOut(pixbit|pixhex|pixrgb)
 %
-% Meta Principal: movePixBitH
-% Metas Secundarias: pixbit
-% Comprueba si el ancho está dentro del rango y, en ese caso
-% se mueve la posición en 1 hacia la derecha. Sino, el valor será 0
-% Básicamente rota todo hacia la derecha y, si es el último elemento, 
-% lo envía al inicio
-
-
-
-
+% Meta Principal: changePixel
+% Metas Secundarias: cadr, caddr, cadddr, caddddr, cadddddr,
+% 					 contar, string, pixhex, pixbit, pixrgb
+% Cambia la posición X por la posición Y para el pixel ingresado, 
 %
-% Dominio: Ancho (int), Pixel (pixbit| pixhex| pixrgb)
-%
-% Meta Principal: movePixRgbH
-% Metas Secundarias: pixrgb
-% Comprueba si el ancho está dentro del rango y, en ese caso
-% se mueve la posición en 1 hacia la derecha. Sino, el valor será 0
-% Básicamente rota todo hacia la derecha y, si es el último elemento, 
-% lo envía al inicio
+
 changePixel(X, PixIn, PixOut):-
     cadr(PixIn, Y),
     caddr(PixIn, BH),

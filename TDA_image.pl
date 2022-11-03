@@ -453,8 +453,34 @@ imgRGBToHex(ImageIn, ImageOut):-
 
 %--------------histograma-----------------%
 %% usando include y exclude sale más rápido
+pixCheck(A, B):-
+    caddr(A, ABH),
+    caddr(B, BBH),
+    contar(A, N),
+    (   N==4 ->  ABH == BBH
+    ;   (   cadddr(A, AG),
+            cadddr(B, BG),
+            cadddr(A, AB),
+            cadddr(B, BB),
+            AG == BG,
+            AB == BB)).
+cons(A, B, [A,B]).
+incluir(_, [], _).
+incluir(Pix, [PixIn|PixsIn], [PixOut|PixsOut]):-
+    (   pixCheck(Pix, PixIn) ->  PixOut is 1
+    ;   PixOut = 'a'
+    ),
+    incluir(Pix, PixsIn, PixsOut).
 
-
+histogram([], _).
+histogram([PixIn|PixsIn], [PixOut|PixsOut]):-
+    caddr(PixIn, BH),
+    include(pixCheck(PixIn), PixsIn, P1),
+    contar(P1, N),
+    NewBH is BH+1,
+	cons(NewBH, N, PixOut),
+    exclude(pixCheck(PixIn), PixsIn, P2),
+    histogram(P2, PixsOut).
 
 
 %-------------rotate90°-------------------%

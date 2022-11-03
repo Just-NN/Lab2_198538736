@@ -1,0 +1,41 @@
+TDA
+Valor binario (logrado | no logrado)
+TDA image - constructor
+logrado 1
+TDA image - bitmap? 
+logrado 1
+TDA image - pixmap?
+logrado 1
+TDA image - hexmap?
+logrado 1
+TDA image - compressed? 
+logrado 1
+TDA image - flipH 
+logrado 1
+TDA image - flipV
+logrado 1
+TDA image - crop 
+logrado 1
+TDA image - imgRGB->imgHex
+logrado 1
+TDA image - histogram 
+logrado 1
+TDA image - rotate90
+logrado 1
+TDA image - compress
+no logrado 0
+TDA image - edit 
+no logrado 0
+TDA image - invertColorBit 
+no logrado 0
+TDA image - invertColorRGB
+no logrado 0
+TDA image - adjustChannel 
+no logrado 0
+TDA image - image->string
+no logrado 0
+TDA image - depthLayers 
+no logrado 0
+TDA image - decompress 
+no logrado 0
+

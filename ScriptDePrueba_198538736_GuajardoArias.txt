@@ -1,0 +1,199 @@
+Ejemplo 1 bitmap y predicado funcionando plenamente e incluso imageToString
+pixbit( 0, 0, 1, 10, PA), 
+pixbit( 0, 1, 0, 20, PB), 
+pixbit( 1, 0, 0, 30, PC), 
+pixbit( 1, 1, 1, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsBitmap(I),
+imageToString(I, Str),
+write(Str).
+
+
+Ejemplo 1.a isbitmap funciona correctamente
+pixbit( 0, 0, 1, 10, PA), 
+pixbit( 0, 1, 0, 20, PB), 
+pixbit( 1, 0, 0, 30, PC), 
+pixbit( 1, 1, 1, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsBitmap( I ).
+
+Ejemplo 1.b bitmap arroja falso cuando es hex
+pixhex( 0, 0, "#123456", 10, PA), 
+pixhex( 0, 1, "#CF1054", 20, PB), 
+pixhex( 1, 0, "#BCDEF1", 30, PC), 
+pixhex( 1, 1, "#123433", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsBitmap( I ).
+
+Ejemplo 1.c bitmap arroja falso cuando es rgb
+pixrgb( 0, 0, 200, 200, 200, 10, PA),
+pixrgb( 0, 1, 200, 200, 200, 20, PB),
+pixrgb( 1, 0, 190, 190, 190, 30, PC),
+pixrgb( 1, 1, 190, 190, 190, 4, PD),
+image( 2, 2, [PA, PB, PC, PD], I),
+imageIsBitmap( I ).
+
+Ejemplo 2 image con hex funciona correctamente
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 1, 0, "#0000FF", 30, PC), 
+pixhex( 1, 1, "#0000FF", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I),
+imageIsHexmap( I ),
+imageToString(I, Str),
+write(Str).
+
+Ejemplo 2.a el predicado de hex arroja verdadero
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 1, 0, "#0000FF", 30, PC), 
+pixhex( 1, 1, "#0000FF", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsHexmap( I ).
+
+Ejemplo 2.b el predicado de hex arroja falso con bit
+pixbit( 0, 0, 1, 10, PA), 
+pixbit( 0, 1, 0, 20, PB), 
+pixbit( 1, 0, 0, 30, PC), 
+pixbit( 1, 1, 1, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsHexmap( I ).
+
+Ejemplo 2.c el predicado de hex arroja falso con rgb
+pixrgb( 0, 0, 200, 200, 200, 10, PA), 
+pixrgb( 0, 1, 200, 200, 200, 20, PB), 
+pixrgb( 1, 0, 190, 190, 190, 30, PC), 
+pixrgb( 1, 1, 190, 190, 190, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsHexmap( I ).
+
+Ejemplo 3 image funciona correctamente con rgb
+pixrgb( 0, 0, 255, 0, 0, 10, PA), 
+pixrgb( 0, 1, 255, 0, 0, 20, PB), 
+pixrgb( 1, 0, 0, 0, 255, 30, PC), 
+pixrgb( 1, 1, 0, 0, 255, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I),
+imageToString(I, Str),
+write(Str).
+
+Ejemplo 3.a el predicado de rgb funciona correctamente con rgb
+pixrgb( 0, 0, 200, 200, 200, 10, PA), 
+pixrgb( 0, 1, 200, 200, 200, 20, PB), 
+pixrgb( 1, 0, 190, 190,190, 30, PC), 
+pixrgb( 1, 1, 190, 190, 190, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsPixmap( I ).
+
+Ejemplo 3.b el predicado de rgb arroja falso con bit
+pixbit( 0, 0, 1, 10, PA), 
+pixbit( 0, 1, 0, 20, PB), 
+pixbit( 1, 0, 0, 30, PC), 
+pixbit( 1, 1, 1, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsPixmap( I ).
+
+Ejemplo 3.c el predicado de rgb arroja falso con hex
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 1, 0, "#0000FF", 30, PC), 
+pixhex( 1, 1, "#0000FF", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsPixmap( I ).
+
+Ejemplo 4 rgbToHex funcionando bien
+pixrgb( 0, 0, 200, 200, 200, 10, PA),
+pixrgb( 0, 1, 200, 200, 200, 20, PB),
+pixrgb( 1, 0, 190, 190,190, 30, PC),
+pixrgb( 1, 1, 190, 190, 190, 4, PD),
+image( 2, 2, [PA, PB, PC, PD], I),
+imageIsPixmap( I ),
+imageRGBToHex(I, I2),
+imageIsHexmap(I2). 
+
+Ejemplo 5 Rotate90 funcionando bien
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 1, 0, "#0000FF", 30, PC), 
+pixhex( 1, 1, "#0000FF", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I),
+imageRotate90(I, I2),
+imageRotate90(I2, I3),
+imageRotate90(I3, I4),
+imageRotate90(I4, I5).
+
+Ejemplo 6 rotate90 funcionando bien de acuerdo a lo descrito por el script
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 1, 0, "#0000FF", 30, PC), 
+pixhex( 1, 1, "#0000FF", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageRotate90(I, I2).
+
+Ejemplo 7 flipV funciona de acuerdo a lo descrito por el script
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 1, 0, "#0000FF", 30, PC), 
+pixhex( 1, 1, "#0000FF", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I),
+imageFlipV(I, I2), 
+imageFlipV(I2, I3).
+
+Ejemplo 8 flipH funciona de acuerdo a lo descrito por el script
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 1, 0, "#0000FF", 30, PC), 
+pixhex( 1, 1, "#0000FF", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I),
+imageFlipH(I, I2), 
+imageFlipH(I2, I3).
+
+Ejemplo 9 crop funciona de acuerdo a lo descrito por el script
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 0, 2, "#0000FF", 30, PC), 
+pixhex( 1, 0, "#0000FF", 4, PD), 
+pixhex( 1, 1, "#FF0000", 4, PE), 
+pixhex( 1, 2, "#FF0000", 4, PF), 
+pixhex( 2, 0, "#FF0000", 4, PG), 
+pixhex( 2, 1, "#FF0000", 4, PH), 
+pixhex( 2, 2, "#FF0000", 4, PI), 
+image( 3, 3, [PA, PB, PC, PD, PE, PF, PG, PH, PI], I), 
+imageCrop( I, 1, 1, 2, 2, I2), 
+pixhex( 0, 0, "#FF0000", 4, PE2), 
+pixhex( 0, 1, "#FF0000", 4, PF2), 
+pixhex( 1, 0, "#FF0000", 4, PH2), 
+pixhex( 1, 1, "#FF0000", 4, PI2), 
+image( 2, 2, [PE2, PF2, PH2, PI2], I3).
+
+Ejemplo 10.a Histograma usando bit
+pixbit( 0, 0, 1, 10, PA), 
+pixbit( 0, 1, 0, 20, PB), 
+pixbit( 1, 0, 0, 30, PC), 
+pixbit( 1, 1, 1, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageToHistogram(I, H).
+
+Ejemplo 10.b Histograma usando hex
+pixhex( 0, 0, "#123456", 10, PA), 
+pixhex( 0, 1, "#CF1054", 20, PB), 
+pixhex( 1, 0, "#BCDEF1", 30, PC), 
+pixhex( 1, 1, "#123433", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageToHistogram(I, H).
+
+Ejemplo 10.c Histograma usando rgb
+pixrgb( 0, 0, 200, 200, 200, 10, PA), 
+pixrgb( 0, 1, 200, 200, 200, 20, PB), 
+pixrgb( 1, 0, 190, 190, 190, 30, PC), 
+pixrgb( 1, 1, 190, 190, 190, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageToHistogram(I, H).
+
+Ejemplo 11 ChangePixel funciona
+pixrgb( 0, 0, 200, 200, 200, 10, PA),
+pixrgb( 0, 1, 200, 200, 200, 20, PB),
+pixrgb( 1, 0, 190, 190,190, 30, PC),
+pixrgb( 1, 1, 190, 190, 190, 4, PD),
+image( 2, 2, [PA, PB, PC, PD], I),
+pixrgb( 1, 1, 120, 150, 160, 4, PE),
+imageChangePixel(I, PE, I2).

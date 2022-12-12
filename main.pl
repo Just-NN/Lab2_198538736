@@ -3,6 +3,10 @@
 	pixbit, pixhex, pixrgb e image.
 	A continuación, se detallan sus constructores y predicados.*/
 
+
+
+%------------ Reglas generales que sirven en los TDA-------------
+%
 % Contar elementos
 % Dominio: lista (de cualquier tipo) X N (int)
 %
@@ -12,8 +16,6 @@
 % Su condición base será si la lista es nula, por lo que no se entrega nada
 
 
-
-%------------ Reglas generales que sirven en los TDA-------------
 %contar([], 0).
 %contar(ListaIn, N).
 %contar([1,2,3], N).
@@ -123,7 +125,7 @@ pixhex(X, Y, Hex, Depth, [X, Y, Hex, Depth]).
 % Metas Secundarias: no aplica
 % Tomamos los elementos y los ordenamos en una lista que asumirá el rol de image
 
-image(Largo, Ancho, Pixeles, [Largo, Ancho, Pixeles]).
+image(Ancho, Largo, Pixeles, [Ancho, Largo, Pixeles]).
 
 % ------------------------------- Pertenencia de los 3 TDA de pixel
 % (pixhex, pixbit y pixrgb)
@@ -207,7 +209,7 @@ bit(Pixel):-
 % Metas Secundarias: pixelsAreBitmap, bit, image
 % Utiliza Pixels para comprobar que sus elementos sean de tipo pixbit
 
-imageTobitmap(Image) :-
+imageIsBitmap(Image) :-
     image(_, _, Pixels, Image),
     maplist(bit, Pixels).
 
@@ -218,7 +220,7 @@ imageTobitmap(Image) :-
 % Metas Secundarias: pixelsAreHexmap, image
 % Utiliza Pixels para comprobar que sus elementos sean de tipo hex
 
-imageTohexmap(Image):-
+imageIsHexmap(Image):-
 	image(_, _, Pixels, Image),
 	pixelsAreHexmap(Pixels).
 
@@ -230,7 +232,7 @@ imageTohexmap(Image):-
 % Metas Secundarias: pixelsAreRGBmap, image
 % Utiliza Pixels para comprobar que sus elementos sean de tipo rgb
 
-imageTorgbmap(Image):-
+imageIsPixmap(Image):-
 	image(_, _, Pixels, Image),
 	pixelsAreRGBmap(Pixels).
 
@@ -242,7 +244,7 @@ imageTorgbmap(Image):-
 % las dimensiones dadas para la imagen
 
 imageIsCompressed(Image):-
-    image(Largo, Ancho, Pixeles, Image),
+    image(Ancho, Largo, Pixeles, Image),
     contar(Pixeles, N),
     Largo*Ancho > N.
 
@@ -251,13 +253,13 @@ imageIsCompressed(Image):-
 
 % Dominio: X (int) X PixIn (pixbit|pixhex|pixrgb) X PixOut(pixbit|pixhex|pixrgb)
 %
-% Meta Principal: changePixel
+% Meta Principal: changePixelH
 % Metas Secundarias: cadr, caddr, cadddr, caddddr, cadddddr,
 % 					 contar, string, pixhex, pixbit, pixrgb
 % Cambia la posición X del pixel ingresado por
 % un nuevo valor
 
-changePixel(X, PixIn, PixOut):-
+changePixelH(X, PixIn, PixOut):-
     cadr(PixIn, Y),
     caddr(PixIn, BH),
     cadddr(PixIn, Depth),
@@ -272,17 +274,16 @@ changePixel(X, PixIn, PixOut):-
 % Dominio: W (int) X W2 (int) X PixlistIn (pixbit|pixhex|pixrgb) X PixlistOut (pixbit|pixhex|pixrgb) 
 %
 % Meta Principal: flipPixels
-% Metas Secundarias: changePixel
+% Metas Secundarias: changePixelH
 % Descripción: se cambia la posición de los pixeles de acuerdo al ancho de la imagen, de modo
 % que queden volteadas horizontalmente
 
-flipPixels(_,_,[],_).
-flipPixels(W, W2, [PixIn|PixsIn], [PixOut|PixsOut]):-
-    changePixel(W, PixIn, PixOut),
-    (   W==0 ->  NewW is W2
-    ;   NewW is W-1
-    ),
-    flipPixels(NewW, W2, PixsIn, PixsOut).
+flipPixels(_,[],_).
+flipPixels(W2, [PixIn|PixsIn], [PixOut|PixsOut]):-
+    car(PixIn, X),
+    W is W2-X,
+    changePixelH(W, PixIn, PixOut),
+    flipPixels(W2, PixsIn, PixsOut).
 
 % Dominio: In (image) X IOut (image)
 %
@@ -291,11 +292,11 @@ flipPixels(W, W2, [PixIn|PixsIn], [PixOut|PixsOut]):-
 % Descripción: se considera una nueva imagen que reconocerá como lista de pixeles
 % a la lista original, pero volteada horizontalmente
 
-flipV(In, IOut):-
-    image(Largo, Ancho, Pixlist, In),
+imageFlipH(In, IOut):-
+    image(Ancho, Largo, Pixlist, In),
     NewAncho is Ancho-1,
-    flipPixels(NewAncho, NewAncho, Pixlist, PixsOut),
-    image(Largo, Ancho, PixsOut, IOut).
+    flipPixels(NewAncho, Pixlist, PixsOut),
+    image(Ancho, Largo, PixsOut, IOut).
 
 
 
@@ -332,13 +333,12 @@ changePixelV(Y, PixIn, PixOut):-
 % Descripción: se cambia la posición de los pixeles de acuerdo al largo de la imagen, de modo
 % que queden volteadas verticalmente
 
-flipPixelsV(_,_,[],_).
-flipPixelsV(W, W2, [PixIn|PixsIn], [PixOut|PixsOut]):-
-    changePixelV(W, PixIn, PixOut),
-    (   W==0 ->  NewW is W2
-    ;   NewW is W-1
-    ),
-    flipPixelsV(NewW, W2, PixsIn, PixsOut).
+flipPixelsV(_,[],_).
+flipPixelsV(W2, [PixIn|PixsIn], [PixOut|PixsOut]):-
+    cadr(PixIn, Y),
+    W1 is W2-Y,
+    changePixelV(W1, PixIn, PixOut),
+    flipPixelsV(W2, PixsIn, PixsOut).
 
 % Dominio: In (image) X IOut (image)
 %
@@ -347,11 +347,11 @@ flipPixelsV(W, W2, [PixIn|PixsIn], [PixOut|PixsOut]):-
 % Descripción: se considera una nueva imagen que reconocerá como lista de pixeles
 % a la lista original, pero volteada verticalmente   
    
-flipH(ImageIn, ImageOut) :-
-    image(Largo, Ancho, PixelsIn, ImageIn),
+imageFlipV(ImageIn, ImageOut) :-
+    image(Ancho, Largo, PixelsIn, ImageIn),
     NewLargo is Largo-1,
-    flipPixelsV(NewLargo, NewLargo, PixelsIn, PixelsOut),
-	image(Largo, Ancho, PixelsOut, ImageOut).
+    flipPixelsV(NewLargo, PixelsIn, PixelsOut),
+	image(Ancho, Largo, PixelsOut, ImageOut).
 
 
 %----------------------------- crop ---------
@@ -383,18 +383,51 @@ inRange(X1, Y1, X2, Y2, Pix):-
 cropPixels(X1, Y1, X2, Y2, PixsIn, Output):-
     include(inRange(X1, Y1, X2, Y2), PixsIn, Output).
 
+% Dominio: X (int) X Y (int) X PixIn (pixbit|pixhex|pixrgb) X  PixOut (pixbit|pixhex|pixrgb)
+%
+% Meta Principal: changeCoordinates
+% Metas Secundarias: caddr, cadddr, contar, string, pixbit, caddddr, cadddddr, pixrgb, pixbit
+% Descripción: regla que permite cambiar las coordenadas del pixel entregado de acuerdo a los valores de X e Y
+
+changeCoordinates(X, Y, PixIn, PixOut):-
+    caddr(PixIn, BH),
+    cadddr(PixIn, Depth),
+    contar(PixIn, N),
+    (   N==4->  (   string(BH) ->  pixhex(X, Y, BH, Depth, PixOut)
+    			;   pixbit(X, Y, BH, Depth, PixOut))
+    ;   (   caddddr(PixIn, B),
+            cadddddr(PixIn, D),
+            pixrgb(X, Y, BH, Depth, B, D, PixOut))).
+
+% Dominio: X (int) X Y (int) X Ancho (int) X Largo (int) X PixIn (lista de pixbit|pixhex|pixrgb)X  PixOut (lista de pixbit|pixhex|pixrgb)
+%
+% Meta Principal: changeCoordinates
+% Metas Secundarias: caddr, cadddr, contar, string, pixbit, caddddr, cadddddr, pixrgb, pixbit
+% Descripción: regla que permite cambiar las coordenadas del pixel entregado de acuerdo a los valores de X e Y
+
+resetPositions(_, _, _, _, [], _).
+resetPositions(X, Y, Ancho, Largo, [PixIn|PixsIn], [PixOut|PixsOut]):-
+    changeCoordinates(X, Y, PixIn, PixOut),
+    (   Y>=Largo-1 ->	NewY is 0, NewX is X+1
+    ;   NewY is Y+1, NewX is X),
+    resetPositions(NewX, NewY, Ancho, Largo, PixsIn, PixsOut).
+    
+
 % Dominio: X1 (int) X Y1 (int) X X2 (int) X Y2 (int) X ImageIn (image) X ImageOut(image)
 %
 % Meta Principal: crop
-% Metas Secundarias: image, cropPixels
+% Metas Secundarias: image, cropPixels, resetPositions
 % Descripción: al igual que otras reglas, ésta ocupa las metas secundarias previamente para
 % considerar una lista de pixeles bajo los criterios dados. En este caso, los pixeles dentro
 % del rango solicitado en cada llamado
     
-crop(X1, Y1, X2, Y2, ImageIn, ImageOut):-
-	image(Largo, Ancho, PixelsIn, ImageIn),
+imageCrop(ImageIn, X1, Y1, X2, Y2, ImageOut):-
+	image(_, _, PixelsIn, ImageIn),
     cropPixels(X1, Y1, X2, Y2, PixelsIn, PixelsOut),
-    image(Largo, Ancho, PixelsOut, ImageOut).
+    NewAncho is X2-X1+1,
+    NewLargo is Y2-Y1+1,
+    resetPositions(0, 0, NewAncho, NewLargo, PixelsOut, PixelsOut2),
+    image(NewAncho, NewLargo, PixelsOut2, ImageOut).
 
 %---------------------------------------------------- rgb to hex
 % Aquí empiezan las metas para convertir rgb a hex
@@ -486,7 +519,8 @@ rgbToHex(X, Y):-
     intToHex(Int, NewInt),
     NewDec is Dec*16,
     intToHex(NewDec, NewInt2),
-    atom_concat(NewInt, NewInt2, Y).
+    atom_concat(NewInt, NewInt2, Y0),
+    atom_string(Y0, Y).
 
 % Dominio: PixsIn (lista de pixbit|pixrgb|pixhex) X PixsOut (lista de pixbit|pixrgb|pixhex)
 %
@@ -504,7 +538,8 @@ pixsRGBToHex([PixIn|PixsIn], [PixOut|PixsOut]):-
     atom_concat("#", ROut, NewR),
     atom_concat(NewR, GOut, NewG),
     atom_concat(NewG, BOut, RGB),
-    pixhex(X, Y, RGB, D, PixOut),
+    atom_string(RGB, RGB1),
+    pixhex(X, Y, RGB1, D, PixOut),
     pixsRGBToHex(PixsIn, PixsOut).
 
 % Dominio: ImageIn(image) X ImageOut(image)
@@ -514,7 +549,7 @@ pixsRGBToHex([PixIn|PixsIn], [PixOut|PixsOut]):-
 % Descripción: Se considera la regla anterior para la lista de pixeles dada por la imagen 
 % de entrada, para así poder obtener la de salida
 
-imgRGBToHex(ImageIn, ImageOut):-
+imageRGBToHex(ImageIn, ImageOut):-
     image(Largo, Ancho, PixelsIn, ImageIn),
     pixsRGBToHex(PixelsIn, PixelsOut),
     image(Largo, Ancho, PixelsOut, ImageOut).
@@ -592,11 +627,19 @@ pixtogram([PixIn|PixsIn], [PixOut|PixsOut]):-
 
 % Dominio: Img1 (image) X Histogram (listade pares)
 %
-% Meta Principal: histogram
+% Meta Principal: ImageToHistogram
 % Metas Secundarias: pixtogram
 % Descripción: aplico la meta secundaria para conseguir una lista con pares
 % de valor y frecuencia
-histogram(Img1, Histogram):-
+findMax([], _).
+findMax(Histogram, ActualValue, ActualColor):-
+    car(Histogram, Par),
+    car(Par, Color),
+    cadr(Par, Value),
+    (   Value>ActualValue -> (   NewValue is Value, NewColor is Color)
+    ;   (   NewValue is ActualValue, NewColor is ActualColor)),
+    findMax(Histogram, NewValue, NewColor).
+imageToHistogram(Img1, Histogram):-
     image(_, _, Pixlist, Img1),
    	pixtogram(Pixlist, Histogram).
 
@@ -657,7 +700,7 @@ transpose([PixIn|PixsIn], [PixOut|PixsOut]):-
 % Esto sería equivalente a rotar las posiciones en 90° y se
 % utiliza la lista de pixeles de salida para la nueva imagen
 
-rotate90(Img1, Img2):-
+imageRotate90(Img1, Img2):-
     image(Ancho, Largo, Pixslist, Img1),
     transpose(Pixslist, PixsOut),
     NewAncho is Ancho-1,
@@ -665,140 +708,337 @@ rotate90(Img1, Img2):-
     image(Largo, Ancho, PixsOutput, Img2),!.
 
 
-%------------------------------------------------------------------
-% DESDE AQUÍ EMPIEZAN MIS SCRIPTS DE EJEMPLOS
+
+% Dominio: Img1(image) X PIn (pixbit|pixhex|pixrgb) X Img2(image)
+%
+% Meta Principal: imageChangePixel
+% Metas Secundarias: image, checkCoordinates
+% Descripción: Se considera una imagen de entrada y un pixel de entrada
+% se irá revisando cada pixel de la Img1 para ver si las coordenadas calzan con las del nuevo pixel
+% En caso de ser así, agrega PixIn en vez del original, y se se termina de crear la nueva Img2 en base a la nueva lista
+
+
+% Dominio: PixIn (pixbit|pixhex|pixrgb) X PixOut (pixbit|pixhex|pixrgb)
+%
+% Meta Principal: copyPix
+% Metas Secundarias: car, cadr, caddr, cadddr, contar, string, pixhex, pixbit, pixrgb, caddddr, cadddddr
+% Descripción: Se evalúa el tipo de pixel y se reconstruye en el PixOut para poder usarlo
+copyPix(PixIn, PixOut):-
+    car(PixIn, X),
+    cadr(PixIn, Y),
+    caddr(PixIn, BH),
+    cadddr(PixIn, Depth),
+    contar(PixIn, N),
+    (   N==4->  (   string(BH) ->  pixhex(X, Y, BH, Depth, PixOut)
+    			;   pixbit(X, Y, BH, Depth, PixOut))
+    ;   (   caddddr(PixIn, B),
+            cadddddr(PixIn, D),
+            pixrgb(X, Y, BH, Depth, B, D, PixOut))).
+
+% Dominio: P1 (pixbit|pixhex|pixrgb) X P2 (pixbit|pixhex|pixrgb)
+%
+% Meta Principal: checkCoordinates
+% Metas Secundarias: car, cadr
+% Descripción: Se comprueba que ambos pares de coordenadas calcen
+
+checkCoordinates(P1, P2):-
+    car(P1, X1),
+    car(P2, X2),
+    cadr(P1, Y1),
+    cadr(P2, Y2),
+    X1 == X2,
+    Y1 == Y2.
+
+% Dominio: PixlistIn (lista de pixbit|pixhex|pixrgb) X PIn (pixbit|pixhex|pixrgb) X PixOut (pixbit|pixhex|pixrgb)
+%
+% Meta Principal: pixlistChangePixel
+% Metas Secundarias: checkCoordinates, copyPix
+% Descripción: Se checkean las coordenadas para copiar el pixel en la posición adecuada, sino, se copia el pixel que va originalmente en lugar de reemplazarlo
+% Utiliza recursión, y un caso base en el cual 
+pixlistChangePixel([], _, _).
+pixlistChangePixel([PixIn|PixsIn], PIn, [PixOut|PixsOut]):-
+    (   checkCoordinates(PixIn, PIn) ->  copyPix(PIn, PixOut)
+    ;   copyPix(PixIn, PixOut)),
+    pixlistChangePixel(PixsIn, PIn, PixsOut).
+
+% Dominio: Img1(image) X PIn (pixbit|pixhex|pixrgb) X Img2(image)
+%
+% Meta Principal: imageChangePixel
+% Metas Secundarias: image, checkCoordinates
+% Descripción: Se considera una imagen de entrada y un pixel de entrada
+% se irá revisando cada pixel de la Img1 para ver si las coordenadas calzan con las del nuevo pixel
+% En caso de ser así, agrega PixIn en vez del original, y se se termina de crear la nueva Img2 en base a la nueva lista
+
+imageChangePixel(Img1, PIn, Img2):-
+    image(Width, Large, Pixlist1, Img1),
+    pixlistChangePixel(Pixlist1, PIn, Pixlist2),
+    image(Width, Large, Pixlist2, Img2).
+
+% Dominio: PixIn (pixbit|pixhex|pixrgb) X StrOut (string)
+%
+% Meta Principal: PixToString
+% Metas Secundarias: caddr, contar, atom_string, atom_concat, cadddr, caddddr, cadddddr
+% Descripción: Regla que permite convertir en string el color de un pixel 
+
+
+pixToString(PixIn, StrOut):-
+    caddr(PixIn, BH),
+    contar(PixIn, N),
+    (   N==4->  atom_string(BH, StrOut)
+    ;   (   cadddr(PixIn, B),
+            caddddr(PixIn, D),
+            cadddddr(PixIn, Depth),
+            atom_concat(BH, ", ", R),
+            atom_concat(R, B, RG),
+            atom_concat(RG, ", ", RG2),
+            atom_concat(RG2, D, RGB),
+            atom_concat(RGB, ", ", RGB2),
+            atom_concat(RGB2, Depth, RGB3),
+            atom_string(RGB3, StrOut))).
+
+% Dominio: S1 (string) X S2 (string) X S3 (string)
+%
+% Meta Principal: StrAppend
+% Metas Secundarias: atom_concat, atom_string
+% Descripción: Regla que permite agregar un string al final de otro
+
+strAppend(S1, S2, S3):-
+    atom_concat(S1, S2, SE),
+    atom_string(SE, S3).
+
+% Dominio: Width (int) X Width2 (int) X PixlistIn (lista de pixbit|pixhex|pixrgb) X StrOut (string) X Final (string)
+%
+% Meta Principal: pixlistToString
+% Metas Secundarias: pixToString, strAppend
+% Descripción: Regla que permite convertir en string toda una lista de pixeles en un formato similar a cómo se mostraría una imagen
+% Usa recursión y un caso base, el cual, ocurre cuando la lista se vacía, y se iguala Final al StrOut
+
+pixlistToString(_, _, [], StrOut, Final):-
+    copy_term(StrOut, Final).
+pixlistToString(Width, Width2, [PixIn|PixsIn], StrOut, Final):-
+    pixToString(PixIn, C),
+    (   Width =\= 0 ->	(   strAppend(C, "\t", NewC),
+                            strAppend(StrOut, NewC, NewStrOut),
+                            NewW is Width-1)
+    ;   (   strAppend(C, " \n", NewC),
+            strAppend(StrOut, NewC, NewStrOut),
+        	NewW is Width2
+        )
+    ),
     
+    pixlistToString(NewW, Width2, PixsIn, NewStrOut, Final).
+
+% Dominio: I (image) X Sout (string)
+%
+% Meta Principal: imageToString
+% Metas Secundarias: image, pixlistToString
+% Descripción: Regla que permite convertir en string la lista de pixeles de una imagen, utilizando su ancho para poder realizar los saltos de linea
+% y considerando una tabulacion entre cada pixel
+
+imageToString(I, Sout):-
+    image(W, _, Pixs, I),
+    pixlistToString(W, W, Pixs, "", Sout).
+
 /*
- * pixbit( 0, 0, 1, 10, PA),
+Ejemplo 1 bitmap y predicado funcionando plenamente e incluso imageToString
+pixbit( 0, 0, 1, 10, PA), 
 pixbit( 0, 1, 0, 20, PB), 
 pixbit( 1, 0, 0, 30, PC), 
-pixbit( 1, 1, 1, 4, PD),
+pixbit( 1, 1, 1, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsBitmap(I),
+imageToString(I, Str),
+write(Str).
+
+
+Ejemplo 1.a isbitmap funciona correctamente
+pixbit( 0, 0, 1, 10, PA), 
+pixbit( 0, 1, 0, 20, PB), 
+pixbit( 1, 0, 0, 30, PC), 
+pixbit( 1, 1, 1, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsBitmap( I ).
+
+Ejemplo 1.b bitmap arroja falso cuando es hex
+pixhex( 0, 0, "#123456", 10, PA), 
+pixhex( 0, 1, "#CF1054", 20, PB), 
+pixhex( 1, 0, "#BCDEF1", 30, PC), 
+pixhex( 1, 1, "#123433", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsBitmap( I ).
+
+Ejemplo 1.c bitmap arroja falso cuando es rgb
+pixrgb( 0, 0, 200, 200, 200, 10, PA),
+pixrgb( 0, 1, 200, 200, 200, 20, PB),
+pixrgb( 1, 0, 190, 190, 190, 30, PC),
+pixrgb( 1, 1, 190, 190, 190, 4, PD),
 image( 2, 2, [PA, PB, PC, PD], I),
-imageTobitmap(I),
-imageIsCompressed(I). 
-no comprimida, BORRAR 1 pixel de la lista para que dé true */
+imageIsBitmap( I ).
 
+Ejemplo 2 image con hex funciona correctamente
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 1, 0, "#0000FF", 30, PC), 
+pixhex( 1, 1, "#0000FF", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I),
+imageIsHexmap( I ),
+imageToString(I, Str),
+write(Str).
 
-/*
- * pixbit( 0, 0, 1, 10, PBA),
-pixbit( 0, 1, 0, 20, PBB), 
-pixbit( 1, 0, 0, 30, PBC), 
-pixbit( 1, 1, 1, 4, PBD),
-image( 2, 2, [PBA, PBB, PBC, PBD], IBit1),
-flipH(IBit1, IBit1FH),
-flipV(IBit1, IBit1FV),
-pixhex( 0, 0, "#E3A589", 10, PHA),
-pixhex( 0, 1, "#E3ABD9", 20, PHB), 
-pixhex( 1, 0, "#FFA234", 30, PHC), 
-pixhex( 1, 1, "#AB2345", 4, PHD),
-image(2,2,[PHA, PHB, PHC, PHD], IH1),
-flipH(IH1, IHFH),
-flipV(IH1, IHFV),
-pixrgb( 0, 0, 244, 255, 2, 10, PRA),
-pixrgb( 0, 1, 244, 255, 2, 20, PRB), 
-pixrgb( 1, 0, 160, 1, 155, 30, PRC), 
-pixrgb( 1, 1, 1, 0, 2, 4, PRD),
-image(2, 2, [PRA, PRB, PRC, PRD], IR1),
-flipH(IR1, IR1FH),
-flipV(IR1, IR1FV). 
+Ejemplo 2.a el predicado de hex arroja verdadero
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 1, 0, "#0000FF", 30, PC), 
+pixhex( 1, 1, "#0000FF", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsHexmap( I ).
 
-flipH y flipV en los 3 pixeles */
+Ejemplo 2.b el predicado de hex arroja falso con bit
+pixbit( 0, 0, 1, 10, PA), 
+pixbit( 0, 1, 0, 20, PB), 
+pixbit( 1, 0, 0, 30, PC), 
+pixbit( 1, 1, 1, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsHexmap( I ).
 
-/*
- * para 3x3
-pixbit( 0, 0, 1, 10, PBA),
-pixbit( 0, 1, 0, 20, PBB), 
-pixbit( 0, 2, 0, 30, PBC), 
-pixbit( 1, 0, 1, 4, PBD),
-pixbit( 1, 1, 1, 4, PBE),
-pixbit( 1, 2, 1, 4, PBF),
-pixbit( 2, 0, 1, 4, PBG),
-pixbit( 2, 1, 1, 4, PBH),
-pixbit( 2, 2, 1, 4, PBI),
-image( 3, 3, [PBA, PBB, PBC, PBD, PBE, PBF, PBG, PBH, PBI], IBit1),
-flipH(IBit1, IBit1FH),
-flipV(IBit1, IBit1FV).
+Ejemplo 2.c el predicado de hex arroja falso con rgb
+pixrgb( 0, 0, 200, 200, 200, 10, PA), 
+pixrgb( 0, 1, 200, 200, 200, 20, PB), 
+pixrgb( 1, 0, 190, 190, 190, 30, PC), 
+pixrgb( 1, 1, 190, 190, 190, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsHexmap( I ).
+
+Ejemplo 3 image funciona correctamente con rgb
+pixrgb( 0, 0, 255, 0, 0, 10, PA), 
+pixrgb( 0, 1, 255, 0, 0, 20, PB), 
+pixrgb( 1, 0, 0, 0, 255, 30, PC), 
+pixrgb( 1, 1, 0, 0, 255, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I).
+
+Ejemplo 3.a el predicado de rgb funciona correctamente con rgb
+pixrgb( 0, 0, 200, 200, 200, 10, PA), 
+pixrgb( 0, 1, 200, 200, 200, 20, PB), 
+pixrgb( 1, 0, 190, 190,190, 30, PC), 
+pixrgb( 1, 1, 190, 190, 190, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsPixmap( I ).
+
+Ejemplo 3.b el predicado de rgb arroja falso con bit
+pixbit( 0, 0, 1, 10, PA), 
+pixbit( 0, 1, 0, 20, PB), 
+pixbit( 1, 0, 0, 30, PC), 
+pixbit( 1, 1, 1, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsPixmap( I ).
+
+Ejemplo 3.c el predicado de rgb arroja falso con hex
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 1, 0, "#0000FF", 30, PC), 
+pixhex( 1, 1, "#0000FF", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageIsPixmap( I ).
+
+Ejemplo 4 rgbToHex funcionando bien
+pixrgb( 0, 0, 200, 200, 200, 10, PA),
+pixrgb( 0, 1, 200, 200, 200, 20, PB),
+pixrgb( 1, 0, 190, 190,190, 30, PC),
+pixrgb( 1, 1, 190, 190, 190, 4, PD),
+image( 2, 2, [PA, PB, PC, PD], I),
+imageIsPixmap( I ),
+imageRGBToHex(I, I2),
+imageIsHexmap(I2),
+imageToString(I2, Str), 
+write(Str). 
+
+Ejemplo 5 Rotate90 funcionando bien
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 1, 0, "#0000FF", 30, PC), 
+pixhex( 1, 1, "#0000FF", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I),
+imageRotate90(I, I2),
+imageRotate90(I2, I3),
+imageRotate90(I3, I4),
+imageRotate90(I4, I5).
+
+Ejemplo 6 rotate90 funcionando bien de acuerdo a lo descrito por el script
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 1, 0, "#0000FF", 30, PC), 
+pixhex( 1, 1, "#0000FF", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageRotate90(I, I2).
+
+Ejemplo 7 flipV funciona de acuerdo a lo descrito por el script
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 1, 0, "#0000FF", 30, PC), 
+pixhex( 1, 1, "#0000FF", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I),
+imageFlipV(I, I2), 
+imageFlipV(I2, I3).
+
+Ejemplo 8 flipH funciona de acuerdo a lo descrito por el script
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 1, 0, "#0000FF", 30, PC), 
+pixhex( 1, 1, "#0000FF", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I),
+imageFlipH(I, I2), 
+imageFlipH(I2, I3).
+
+Ejemplo 9 crop funciona de acuerdo a lo descrito por el script
+pixhex( 0, 0, "#FF0000", 10, PA), 
+pixhex( 0, 1, "#FF0000", 20, PB), 
+pixhex( 0, 2, "#0000FF", 30, PC), 
+pixhex( 1, 0, "#0000FF", 4, PD), 
+pixhex( 1, 1, "#FF0000", 4, PE), 
+pixhex( 1, 2, "#FF0000", 4, PF), 
+pixhex( 2, 0, "#FF0000", 4, PG), 
+pixhex( 2, 1, "#FF0000", 4, PH), 
+pixhex( 2, 2, "#FF0000", 4, PI), 
+image( 3, 3, [PA, PB, PC, PD, PE, PF, PG, PH, PI], I), 
+imageCrop( I, 1, 1, 2, 2, I2), 
+pixhex( 0, 0, "#FF0000", 4, PE2), 
+pixhex( 0, 1, "#FF0000", 4, PF2), 
+pixhex( 1, 0, "#FF0000", 4, PH2), 
+pixhex( 1, 1, "#FF0000", 4, PI2), 
+image( 2, 2, [PE2, PF2, PH2, PI2], I3).
+
+Ejemplo 10.a Histograma usando bit
+pixbit( 0, 0, 1, 10, PA), 
+pixbit( 0, 1, 0, 20, PB), 
+pixbit( 1, 0, 0, 30, PC), 
+pixbit( 1, 1, 1, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageToHistogram(I, H).
+
+Ejemplo 10.b Histograma usando hex
+pixhex( 0, 0, "#123456", 10, PA), 
+pixhex( 0, 1, "#CF1054", 20, PB), 
+pixhex( 1, 0, "#BCDEF1", 30, PC), 
+pixhex( 1, 1, "#123433", 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageToHistogram(I, H).
+
+Ejemplo 10.c Histograma usando rgb
+pixrgb( 0, 0, 200, 200, 200, 10, PA), 
+pixrgb( 0, 1, 200, 200, 200, 20, PB), 
+pixrgb( 1, 0, 190, 190, 190, 30, PC), 
+pixrgb( 1, 1, 190, 190, 190, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imageToHistogram(I, H).
+
+Ejemplo 11 ChangePixel funciona
+pixrgb( 0, 0, 200, 200, 200, 10, PA),
+pixrgb( 0, 1, 200, 200, 200, 20, PB),
+pixrgb( 1, 0, 190, 190,190, 30, PC),
+pixrgb( 1, 1, 190, 190, 190, 4, PD),
+image( 2, 2, [PA, PB, PC, PD], I),
+pixrgb( 1, 1, 120, 150, 160, 4, PE),
+imageChangePixel(I, PE, I2).
+
 */
 
-
-/* Ejemplo crop
-pixbit( 0, 0, 1, 10, PBA),
-pixbit( 0, 1, 0, 20, PBB), 
-pixbit( 0, 2, 0, 30, PBC), 
-pixbit( 1, 0, 1, 4, PBD),
-pixbit( 1, 1, 1, 4, PBE),
-pixbit( 1, 2, 1, 4, PBF),
-pixbit( 2, 0, 1, 4, PBG),
-pixbit( 2, 1, 1, 4, PBH),
-pixbit( 2, 2, 1, 4, PBI),
-image( 3, 3, [PBA, PBB, PBC, PBD, PBE, PBF, PBG, PBH, PBI], IBit1),
-crop(1,1,2,2, IBit1, Icrop). */
-
-/* Ejemplo crop rgb
-pixrgb( 0, 0, 244, 255, 2, 10, PRA),
-pixrgb( 0, 1, 244, 255, 2, 20, PRB), 
-pixrgb( 1, 0, 160, 1, 155, 30, PRC), 
-pixrgb( 1, 1, 1, 0, 2, 4, PRD),
-image(2, 2, [PRA, PRB, PRC, PRD], IR1),
-crop(0,0,0,0, IR1, Icrop).*/
-
-/* Ejemplo de imagen rgb a hex
- * pixrgb( 0, 0, 244, 255, 2, 10, PRA),
-pixrgb( 0, 1, 244, 255, 2, 20, PRB), 
-pixrgb( 1, 0, 160, 1, 155, 30, PRC), 
-pixrgb( 1, 1, 1, 0, 2, 4, PRD),
-image(2, 2, [PRA, PRB, PRC, PRD], IR1),
-imgRGBToHex(IR1, IH1).
-*/
-
-/* Histograma Bit
- * pixbit( 0, 0, 1, 10, PBA),
-pixbit( 0, 1, 0, 20, PBB), 
-pixbit( 1, 0, 0, 30, PBC), 
-pixbit( 1, 1, 1, 4, PBD),
-image(2, 2, [PBA, PBB, PBC, PBD], IR1),
-histogram(IR1, IH1).
-*/
-/* Histograma RGB
- * pixrgb( 0, 0, 244, 255, 2, 10, PRA),
-pixrgb( 0, 1, 244, 255, 2, 20, PRB), 
-pixrgb( 1, 0, 160, 1, 155, 30, PRC), 
-pixrgb( 1, 1, 1, 0, 2, 4, PRD),
-image(2, 2, [PRA, PRB, PRC, PRD], IR1),
-histogram(IR1, IH1).
-*/
-
-
-/* Histograma Hex
- * pixhex( 0, 0, "#E3A589", 10, PHA),
-pixhex( 0, 1, "#E3ABD9", 20, PHB), 
-pixhex( 1, 0, "#FFA234", 30, PHC), 
-pixhex( 1, 1, "#AB2345", 4, PHD),
-image(2, 2, [PHA, PHB, PHC, PHD], IR1),
-histogram(IR1, IH1).
-*/
-
-/* Rotate90 con bit
- * pixbit( 0, 0, 1, 10, PBA),
-pixbit( 0, 1, 0, 20, PBB), 
-pixbit( 1, 0, 0, 30, PBC), 
-pixbit( 1, 1, 1, 4, PBD),
-image(2, 2, [PBA, PBB, PBC, PBD], IR1),
-rotate90(IR1, IH1). */
-
-/* Rotate90 con rgb
- * pixrgb( 0, 0, 244, 255, 2, 10, PRA),
-pixrgb( 0, 1, 244, 255, 2, 20, PRB), 
-pixrgb( 1, 0, 160, 1, 155, 30, PRC), 
-pixrgb( 1, 1, 1, 0, 2, 4, PRD),
-image(2, 2, [PRA, PRB, PRC, PRD], IR1),
-rotate90(IR1, IH1).*/
-
-/* Rotate90 con hex
- * pixhex( 0, 0, "#E3A589", 10, PHA),
-pixhex( 0, 1, "#E3ABD9", 20, PHB), 
-pixhex( 1, 0, "#FFA234", 30, PHC), 
-pixhex( 1, 1, "#AB2345", 4, PHD),
-image(2, 2, [PHA, PHB, PHC, PHD], IR1),
-rotate90(IR1, IH1).
-*/
